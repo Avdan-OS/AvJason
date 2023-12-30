@@ -4,3 +4,6 @@
 //! 
 //! A parser for [JSON5](https://json5.org/).
 //! 
+#![feature(iter_map_windows)]
+
+pub mod utils;
