@@ -21,7 +21,7 @@ pub struct SourceFile {
 impl SourceFile {
     ///
     /// Splits lines by ECMA-abiding line endings.
-    /// 
+    ///
     fn split_lines(src: &str) -> impl Iterator<Item = usize> + '_ {
         src.chars()
             .enumerate()
@@ -42,7 +42,7 @@ impl SourceFile {
 
     ///
     /// Returns a string representing a [Loc] in ${FILE}:${LINE}:${COLUMN} format.
-    /// 
+    ///
     pub fn file_line_column(&self, loc: &Loc) -> Option<String> {
         let Some((ln, col)) = self
             .line_starts
@@ -59,7 +59,7 @@ impl SourceFile {
 
     ///
     /// Returns the original source code at a particular [Span].
-    /// 
+    ///
     pub fn source_at<S: TryIntoSpan>(&self, span: impl RangeBounds<S>) -> Option<&str> {
         let span = S::try_into_span(span)?;
         if span.end.index > self.contents.len() {
@@ -82,7 +82,7 @@ impl SourceFile {
 
     ///
     /// Attempts to read a [SourceFile] from a file.
-    /// 
+    ///
     pub fn load_file(path: impl AsRef<Path>) -> io::Result<Self> {
         let path = path.as_ref();
         let contents = fs::read_to_string(path)?;

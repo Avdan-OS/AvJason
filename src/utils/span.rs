@@ -97,6 +97,13 @@ impl Span {
             end: Loc { index: end },
         })
     }
+
+    pub fn single_char(loc: Loc) -> Span {
+        Self {
+            start: loc,
+            end: loc + 1,
+        }
+    }
 }
 
 ///
