@@ -15,10 +15,15 @@ dependencies = [
 name = "avjason"
 version = "0.1.0"
 dependencies = [
+ "avjason-macros",
  "lazy_static",
  "regex",
  "unicode_categories",
 ]
+
+[[package]]
+name = "avjason-macros"
+version = "0.1.0"
 
 [[package]]
 name = "lazy_static"
