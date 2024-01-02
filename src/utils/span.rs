@@ -104,6 +104,20 @@ impl Span {
             end: loc + 1,
         }
     }
+
+    pub fn combine(self, iter: impl IntoIterator<Item = Self>) -> Self {
+        let start = self;
+        let last = iter.into_iter().last();
+
+        if let Some(end) = last {
+            Self {
+                start: start.start,
+                end: end.end,
+            }
+        } else {
+            start
+        }
+    }
 }
 
 ///
@@ -169,4 +183,8 @@ impl TryIntoSpan for usize {
             end: Loc { index: end },
         })
     }
+}
+
+pub trait Spanned {
+    fn span(&self) -> Span;
 }
