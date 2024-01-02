@@ -7,9 +7,9 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+finl_unicode = "1.2.0"
 lazy_static = "1.4.0"
 regex = "1.10.2"
-unicode_categories = "0.1.1"
 
 [dependencies.avjason-macros]
 path = "./macros"
