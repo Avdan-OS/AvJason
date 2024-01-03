@@ -134,7 +134,7 @@ pub fn Lex(args: TokenStream, input: TokenStream) -> TokenStream {
                         if input.peek() == Some(&#ch) {
                             // Unwrap okay, because otherwise .peek returns None.
                             let (l, _) = input.next().unwrap();
-                            return Some(Self(crate::utils::Span::single_char(l)));
+                            return Some(Self{ span: crate::utils::Span::single_char(l)});
                         }
 
                         None

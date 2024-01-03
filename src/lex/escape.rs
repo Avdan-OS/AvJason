@@ -14,7 +14,7 @@ pub fn is_hex_digit(ch: &char) -> bool {
     ch.is_ascii_hexdigit()
 }
 
-#[derive(Debug, Spanned)]
+#[derive(Debug, Clone, Spanned)]
 #[Lex]
 pub enum EscapeSequence {
     Unicode(UnicodeEscapeSequence),
@@ -23,14 +23,14 @@ pub enum EscapeSequence {
     Character(CharacterEscapeSequence),
 }
 
-#[derive(Debug, Spanned)]
+#[derive(Debug, Clone, Spanned)]
 #[Lex]
 pub enum CharacterEscapeSequence {
     Single(SingleEscapeCharacter),
     NonEscape(NonEscapeCharacter),
 }
 
-#[derive(Debug, Spanned)]
+#[derive(Debug, Clone, Spanned)]
 pub struct SingleEscapeCharacter(Span);
 
 impl Lex for SingleEscapeCharacter {
@@ -51,7 +51,7 @@ impl Lex for SingleEscapeCharacter {
     }
 }
 
-#[derive(Debug, Spanned)]
+#[derive(Debug, Clone, Spanned)]
 pub struct NonEscapeCharacter(Span);
 
 struct EscapeCharacter;
@@ -88,7 +88,7 @@ impl Lex for NonEscapeCharacter {
     }
 }
 
-#[derive(Debug, Spanned)]
+#[derive(Debug, Clone, Spanned)]
 pub struct NullEscapeSequence(Span);
 
 impl Lex for NullEscapeSequence {
@@ -107,7 +107,7 @@ impl Lex for NullEscapeSequence {
     }
 }
 
-#[derive(Debug, Spanned)]
+#[derive(Debug, Clone, Spanned)]
 pub struct HexEscapeSequence(Span);
 
 impl Lex for HexEscapeSequence {
@@ -137,7 +137,7 @@ impl Lex for HexEscapeSequence {
     }
 }
 
-#[derive(Debug, Spanned)]
+#[derive(Debug, Clone, Spanned)]
 pub struct UnicodeEscapeSequence(Span);
 
 impl Lex for UnicodeEscapeSequence {

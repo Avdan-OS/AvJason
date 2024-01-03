@@ -10,9 +10,16 @@ use std::{
     path::{Path, PathBuf},
 };
 
+use anyhow::anyhow;
 pub use span::*;
 
-use crate::lex::{LexError, LexResult};
+use crate::{
+    lex::{
+        tokens::{InputElement, Lex},
+        IntoLexResult, LexError, LexResult,
+    },
+    syntax::{value::Value, ParseBuffer},
+};
 
 #[derive(Debug)]
 pub struct SourceFile {
@@ -124,6 +131,42 @@ impl SourceFile {
     pub(crate) fn iter(&self) -> SourceIter {
         SourceIter::new(self)
     }
+
+    pub(crate) fn lex(&self) -> LexResult<Vec<InputElement>> {
+        let mut v = vec![];
+        let iter = &mut self.iter();
+
+        while !iter.eof() {
+            match InputElement::lex(iter).into_lex_result() {
+                Ok(Some(t)) => v.push(t),
+                Ok(None) => {
+                    return iter.error().expected(Some(0..), "Something...");
+                }
+                Err(err) => {
+                    return Err(err);
+                }
+            }
+        }
+
+        Ok(Some(v))
+    }
+
+    pub(crate) fn parse(&self) -> Result<Value, anyhow::Error> {
+        let Some(lexxed) = self.lex()? else {
+            return Err(anyhow!("Empty file!"));
+        };
+
+        let tokens = lexxed
+            .into_iter()
+            .filter_map(|token| match token {
+                InputElement::Token(t) => Some(t),
+                _ => None,
+            })
+            .collect();
+
+        let buf = &mut ParseBuffer::new(self, tokens);
+        buf.parse().map_err(Into::into)
+    }
 }
 
 #[derive(Clone)]
@@ -149,6 +192,12 @@ impl<'a> SourceIter<'a> {
             inner: &file.contents,
             index: 0,
         }
+    }
+
+    pub(crate) fn source_at(&self, span: Span) -> String {
+        (self.inner[span.start.index..span.end.index])
+            .iter()
+            .collect()
     }
 
     pub(crate) fn peek(&self) -> Option<&char> {
@@ -221,6 +270,10 @@ impl<'a> SourceIter<'a> {
 
     pub(crate) fn error(&self) -> SourceErrorHelper {
         SourceErrorHelper { iter: self }
+    }
+
+    pub(crate) fn eof(&self) -> bool {
+        self.index >= self.inner.len()
     }
 }
 

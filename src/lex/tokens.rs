@@ -1,7 +1,10 @@
 use avjason_macros::{Lex, Spanned};
 use finl_unicode::categories::{CharacterCategories, MinorCategory};
 
-use crate::utils::{SourceIter, Span, TryIntoSpan};
+use crate::{
+    syntax::Parse,
+    utils::{SourceFile, SourceIter, Span, TryIntoSpan, Spanned},
+};
 
 use super::{escape::UnicodeEscapeSequence, number::Number, strings::LString, IntoLexResult};
 
@@ -10,41 +13,195 @@ pub(crate) trait Lex: Sized {
     fn peek(input: &SourceIter) -> bool;
 }
 
-#[derive(Debug, Spanned)]
+///
+/// Util macro for Syntax parsing.
+///
+macro_rules! peek {
+    ($t: ident, $l: literal, $e: expr) => {
+        #[allow(non_snake_case)]
+        #[doc(hidden)]
+        pub fn $t() -> crate::syntax::utils::Peeker<$t> {
+            ($e, $e)
+        }
+
+        impl crate::syntax::Parse for $t {
+            fn parse(input: &mut crate::syntax::ParseBuffer) -> crate::syntax::ParserResult<Self> {
+                let Some(token) = input.next() else {
+                    return input.error().expected(concat!("`", stringify!($l), "`"));
+                };
+
+                #[allow(clippy::redundant_closure_call)]
+                let Some(t) = $e(token) else {
+                    return input.error().expected(concat!("`", stringify!($l), "`"));
+                };
+
+                Ok(t)
+            }
+        }
+    };
+}
+
+macro_rules! peek_only {
+    ($t: ident, $e: expr) => {
+        #[allow(non_snake_case)]
+        #[doc(hidden)]
+        pub fn $t(token: &Token) -> bool {
+            #[allow(clippy::redundant_closure_call)]
+            $e(token)
+        }
+    };
+}
+
+#[derive(Debug, Clone, Spanned)]
+pub struct True {
+    span: Span
+}
+
+impl Parse for True {
+    fn parse(input: &mut crate::syntax::ParseBuffer) -> crate::syntax::ParserResult<Self> {
+        let mut f = input.fork();
+        let ident: LIdentifier = f.parse()?;
+        if f.source_text(ident.span()) != "true" {
+            return input.error()
+                .expected("`true` here.");
+        }
+
+        input.advance_to(f);
+
+        Ok(Self{ span: ident.span() })
+    }
+}
+
+peek_only!(True, |token: &Token| matches!(token, Token::Identifier(ref ident) if ident.raw_value == "true"));
+
+
+#[derive(Debug, Clone, Spanned)]
+pub struct False {
+    span: Span
+}
+
+impl Parse for False {
+    fn parse(input: &mut crate::syntax::ParseBuffer) -> crate::syntax::ParserResult<Self> {
+        let mut f = input.fork();
+        let ident: LIdentifier = f.parse()?;
+        if f.source_text(ident.span()) != "false" {
+            return input.error()
+                .expected("`false` here.");
+        }
+
+        input.advance_to(f);
+
+        Ok(Self{ span: ident.span() })
+    }
+}
+peek_only!(False, |token: &Token| matches!(token, Token::Identifier(ref ident) if ident.raw_value == "false"));
+
+#[derive(Debug, Clone, Spanned)]
+pub struct Null {
+    span: Span
+}
+
+impl Parse for Null {
+    fn parse(input: &mut crate::syntax::ParseBuffer) -> crate::syntax::ParserResult<Self> {
+        let mut f = input.fork();
+        let ident: LIdentifier = f.parse()?;
+        if f.source_text(ident.span()) != "null" {
+            return input.error()
+                .expected("`null` here.");
+        }
+
+        input.advance_to(f);
+
+        Ok(Self{ span: ident.span() })
+    }
+}
+
+peek_only!(Null, |token: &Token| matches!(token, Token::Identifier(ref ident) if ident.raw_value == "null"));
+
+
+#[derive(Debug, Clone, Spanned)]
 #[Lex('{')]
-pub struct OpenBrace(Span);
+pub struct OpenBrace {
+    span: Span,
+}
 
-#[derive(Debug, Spanned)]
+peek!(OpenBrace, '{', |token| match token {
+    Token::Punctuator(crate::lex::tokens::Punct::OpenBrace(s)) => Some(s),
+    _ => None,
+});
+
+#[derive(Debug, Clone, Spanned)]
 #[Lex('}')]
-pub struct CloseBrace(Span);
+pub struct CloseBrace {
+    span: Span,
+}
 
-#[derive(Debug, Spanned)]
+peek!(CloseBrace, '}', |token| match token {
+    Token::Punctuator(crate::lex::tokens::Punct::CloseBrace(s)) => Some(s),
+    _ => None,
+});
+
+#[derive(Debug, Clone, Spanned)]
 #[Lex('[')]
-pub struct OpenBracket(Span);
+pub struct OpenBracket {
+    span: Span,
+}
 
-#[derive(Debug, Spanned)]
+peek!(OpenBracket, '[', |token| match token {
+    Token::Punctuator(crate::lex::tokens::Punct::OpenBracket(s)) => Some(s),
+    _ => None,
+});
+
+#[derive(Debug, Clone, Spanned)]
 #[Lex(']')]
-pub struct CloseBracket(Span);
+pub struct CloseBracket {
+    span: Span,
+}
 
-#[derive(Debug, Spanned)]
+peek!(CloseBracket, ']', |token| match token {
+    Token::Punctuator(crate::lex::tokens::Punct::CloseBracket(s)) => Some(s),
+    _ => None,
+});
+
+#[derive(Debug, Clone, Spanned)]
 #[Lex(':')]
-pub struct Colon(Span);
+pub struct Colon {
+    span: Span,
+}
 
-#[derive(Debug, Spanned)]
+peek!(Colon, ':', |token| match token {
+    Token::Punctuator(crate::lex::tokens::Punct::Colon(s)) => Some(s),
+    _ => None,
+});
+
+#[derive(Debug, Clone, Spanned)]
 #[Lex(',')]
-pub struct Comma(Span);
+pub struct Comma {
+    span: Span,
+}
 
-#[derive(Debug, Spanned)]
+peek!(Comma, ',', |token| match token {
+    Token::Punctuator(crate::lex::tokens::Punct::Comma(s)) => Some(s),
+    _ => None,
+});
+
+#[derive(Debug, Clone, Spanned)]
 #[Lex('-')]
-pub struct Minus(Span);
+pub struct Minus {
+    span: Span,
+}
 
-#[derive(Debug, Spanned)]
+#[derive(Debug, Clone, Spanned)]
 #[Lex('+')]
-pub struct Plus(Span);
+pub struct Plus {
+    span: Span,
+}
 
-#[derive(Debug, Spanned)]
+#[derive(Debug, Clone, Spanned)]
 #[Lex('.')]
-pub struct Dot(Span);
+pub struct Dot {
+    span: Span,
+}
 
 #[macro_export]
 macro_rules! Token {
@@ -90,9 +247,18 @@ macro_rules! Token {
     [.] => {
         $crate::lex::tokens::Dot
     };
+    [false] => {
+        $crate::lex::tokens::False
+    };
+    [true] => {
+        $crate::lex::tokens::True
+    };
+    [null] => {
+        $crate::lex::tokens::Null
+    };
 }
 
-#[derive(Debug, Spanned)]
+#[derive(Debug, Clone, Spanned)]
 #[Lex]
 pub enum Punct {
     OpenBrace(OpenBrace),
@@ -103,7 +269,7 @@ pub enum Punct {
     Comma(Comma),
 }
 
-#[derive(Debug, Spanned)]
+#[derive(Debug, Clone, Spanned)]
 pub struct WhiteSpace(Span);
 
 impl WhiteSpace {
@@ -174,7 +340,7 @@ impl Lex for LineTerminator {
     }
 }
 
-#[derive(Debug, Spanned)]
+#[derive(Debug, Clone, Spanned)]
 pub struct LineTerminatorSeq(Span);
 
 impl Lex for LineTerminatorSeq {
@@ -285,8 +451,30 @@ pub enum InputElement {
 ///
 /// Compliant with [ECMAScript specification for `IdentifierName`](https://262.ecma-international.org/5.1/#sec-7.6).
 ///
-#[derive(Debug, Spanned)]
-pub struct LIdentifier(Span);
+#[derive(Debug, Spanned, Clone)]
+pub struct LIdentifier {
+    span: Span,
+    raw_value: String,
+}
+
+impl LIdentifier {
+    pub(crate) fn value(&self, file: &SourceFile) -> String {
+        todo!()
+    }
+
+    pub(crate) fn peek_token(token: &Token) -> bool {
+        matches!(token, Token::Identifier(i))
+    }
+}
+
+impl Parse for LIdentifier {
+    fn parse(input: &mut crate::syntax::ParseBuffer) -> crate::syntax::ParserResult<Self> {
+        match input.next() {
+            Some(Token::Identifier(ident)) => Ok(ident),
+            _ => input.error().expected("identifier"),
+        }
+    }
+}
 
 impl LIdentifier {
     fn is_unicode_letter(ch: &char) -> bool {
@@ -360,7 +548,11 @@ impl Lex for LIdentifier {
             end = input.next().unwrap().0;
         }
 
-        Some(Self(TryIntoSpan::try_into_span(start..=end)?))
+        let span = TryIntoSpan::try_into_span(start..=end)?;
+        Some(Self {
+            span,
+            raw_value: input.source_at(span)
+        })
     }
 
     fn peek(input: &SourceIter) -> bool {
@@ -368,7 +560,7 @@ impl Lex for LIdentifier {
     }
 }
 
-#[derive(Debug, Spanned)]
+#[derive(Debug, Spanned, Clone)]
 pub enum Token {
     Identifier(LIdentifier),
     Punctuator(Punct),
@@ -404,10 +596,7 @@ impl Lex for Token {
 
 #[cfg(test)]
 mod tests {
-    use crate::{
-        lex::IntoLexResult,
-        utils::SourceFile,
-    };
+    use crate::{lex::IntoLexResult, utils::SourceFile};
 
     use super::{InputElement, Lex};
 

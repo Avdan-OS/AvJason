@@ -7,10 +7,11 @@ use std::ops::RangeBounds;
 
 use avjason_macros::{Lex, Spanned};
 
-use super::tokens::{Dot, LIdentifier, Lex, Minus, Plus};
+use super::tokens::{Dot, LIdentifier, Lex, Minus, Plus, Token};
 use super::{IntoLexResult, LexResult};
 
 use crate::lex::escape::is_hex_digit;
+use crate::syntax::Parse;
 use crate::utils::{SourceIter, Span, Spanned, TryIntoSpan};
 use crate::Token;
 
@@ -20,7 +21,7 @@ use crate::Token;
 /// ---
 /// See [the JSON5 specification](https://spec.json5.org/#prod-JSON5Number).
 ///
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Number(Option<Sign>, Numeric);
 
 impl Spanned for Number {
@@ -57,7 +58,13 @@ impl Lex for Number {
     }
 }
 
-#[derive(Debug, Spanned)]
+impl Number {
+    pub(crate) fn peek_token(token: &Token) -> bool {
+        matches!(token, Token::Number(_))
+    }
+}
+
+#[derive(Debug, Clone, Spanned)]
 #[Lex]
 pub enum Sign {
     Positive(Plus),
@@ -91,7 +98,7 @@ impl<K: Keyword> Lex for K {
     }
 }
 
-#[derive(Debug, Spanned)]
+#[derive(Debug, Clone, Spanned)]
 pub struct Infinity(Span);
 
 impl Keyword for Infinity {
@@ -102,7 +109,7 @@ impl Keyword for Infinity {
     }
 }
 
-#[derive(Debug, Spanned)]
+#[derive(Debug, Clone, Spanned)]
 pub struct NaN(Span);
 
 impl Keyword for NaN {
@@ -120,7 +127,7 @@ impl Keyword for NaN {
 ///
 /// See [the JSON5 specification](https://spec.json5.org/#prod-JSON5NumericLiteral).
 ///
-#[derive(Debug, Spanned)]
+#[derive(Debug, Clone, Spanned)]
 #[Lex]
 pub enum Numeric {
     Infinity(Infinity),
@@ -135,7 +142,7 @@ pub enum Numeric {
 ///
 /// See the [ECMAScript specification](https://262.ecma-international.org/5.1/#sec-7.8.3).
 ///
-#[derive(Debug, Spanned)]
+#[derive(Debug, Clone, Spanned)]
 pub enum NumericLiteral {
     Decimal(DecimalLiteral),
     Hex(HexIntegerLiteral),
@@ -184,7 +191,7 @@ impl Lex for NumericLiteral {
     }
 }
 
-#[derive(Debug, Spanned)]
+#[derive(Debug, Clone, Spanned)]
 #[Lex]
 pub enum DecimalLiteral {
     IntegralDecimalMantissa(IntegralDecimalMantissa),
@@ -192,7 +199,7 @@ pub enum DecimalLiteral {
     Integer(Integer),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct IntegralDecimalMantissa(
     DecimalIntegerLiteral,
     Token![.],
@@ -257,7 +264,7 @@ impl Lex for IntegralDecimalMantissa {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct DecimalMantissa(Token![.], DecimalDigits, Option<ExponentPart>);
 
 impl Spanned for DecimalMantissa {
@@ -300,7 +307,7 @@ impl Lex for DecimalMantissa {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Integer(DecimalIntegerLiteral, Option<ExponentPart>);
 
 impl Spanned for Integer {
@@ -333,7 +340,7 @@ impl Lex for Integer {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum DecimalIntegerLiteral {
     Zero(Zero),
     NonZero(NonZero, Option<DecimalDigits>),
@@ -372,11 +379,13 @@ impl Lex for DecimalIntegerLiteral {
     }
 }
 
-#[derive(Debug, Spanned)]
+#[derive(Debug, Clone, Spanned)]
 #[Lex('0')]
-pub struct Zero(Span);
+pub struct Zero {
+    span: Span
+}
 
-#[derive(Debug, Spanned)]
+#[derive(Debug, Clone, Spanned)]
 pub struct NonZero(Span);
 
 impl Lex for NonZero {
@@ -396,7 +405,7 @@ impl Lex for NonZero {
     }
 }
 
-#[derive(Debug, Spanned)]
+#[derive(Debug, Clone, Spanned)]
 pub struct DecimalDigits(Span);
 
 impl Lex for DecimalDigits {
@@ -424,7 +433,7 @@ impl Lex for DecimalDigits {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ExponentPart(ExponentIdicator, SignedInteger);
 
 impl Spanned for ExponentPart {
@@ -458,23 +467,27 @@ impl Lex for ExponentPart {
     }
 }
 
-#[derive(Debug, Spanned)]
+#[derive(Debug, Clone, Spanned)]
 #[Lex]
 pub enum ExponentIdicator {
     Uppercase(E),
     Lowercase(e),
 }
 
-#[derive(Debug, Spanned)]
+#[derive(Debug, Clone, Spanned)]
 #[Lex('E')]
-pub struct E(Span);
+pub struct E {
+    span: Span
+}
 
-#[derive(Debug, Spanned)]
+#[derive(Debug, Clone, Spanned)]
 #[Lex('e')]
 #[allow(non_camel_case_types)]
-pub struct e(Span);
+pub struct e {
+    span: Span
+}
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum SignedInteger {
     None(DecimalDigits),
     Positive(Token![+], DecimalDigits),
@@ -523,10 +536,10 @@ impl Lex for SignedInteger {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct HexIntegerLiteral(HexPrefix, HexDigit, Vec<HexDigit>);
 
-#[derive(Debug, Spanned)]
+#[derive(Debug, Clone, Spanned)]
 #[Lex]
 pub enum HexPrefix {
     Lowercase(LowercaseHexPrefix),
@@ -572,7 +585,7 @@ impl Lex for HexIntegerLiteral {
     }
 }
 
-#[derive(Debug, Spanned)]
+#[derive(Debug, Clone, Spanned)]
 pub struct LowercaseHexPrefix(Span);
 
 impl Lex for LowercaseHexPrefix {
@@ -594,7 +607,7 @@ impl Lex for LowercaseHexPrefix {
     }
 }
 
-#[derive(Debug, Spanned)]
+#[derive(Debug, Clone, Spanned)]
 pub struct UppercaseHexPrefix(Span);
 
 impl Lex for UppercaseHexPrefix {
@@ -616,7 +629,7 @@ impl Lex for UppercaseHexPrefix {
     }
 }
 
-#[derive(Debug, Spanned)]
+#[derive(Debug, Clone, Spanned)]
 pub struct HexDigit(Span);
 
 impl Lex for HexDigit {

@@ -9,13 +9,19 @@ use crate::{
     utils::{SourceIter, Span, TryIntoSpan},
 };
 
-use super::{escape::EscapeSequence, tokens::Lex, IntoLexResult, LexError, LexResult};
+use super::{escape::EscapeSequence, tokens::{Lex, Token}, IntoLexResult, LexError, LexResult};
 
-#[derive(Debug, Spanned)]
+#[derive(Debug, Clone, Spanned)]
 #[Lex]
 pub enum LString {
     Single(SingleString),
     Double(DoubleString),
+}
+
+impl LString {
+    pub(crate) fn peek_token(token: &Token) -> bool {
+        matches!(token, Token::String(s))
+    }
 }
 
 fn eat_inner_chars(
@@ -64,14 +70,14 @@ fn eat_inner_chars(
     Ok(Some(contents))
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum StrFrag {
     Char(char),
     EscSeq(EscapeSequence),
     LineEsc(LineTerminatorSeq),
 }
 
-#[derive(Debug, Spanned)]
+#[derive(Debug, Clone, Spanned)]
 pub struct SingleString(Span, Vec<StrFrag>);
 
 impl Lex for SingleString {
@@ -101,7 +107,7 @@ impl Lex for SingleString {
     }
 }
 
-#[derive(Debug, Spanned)]
+#[derive(Debug, Clone, Spanned)]
 pub struct DoubleString(Span, Vec<StrFrag>);
 
 impl Lex for DoubleString {

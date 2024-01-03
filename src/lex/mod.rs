@@ -36,6 +36,14 @@ impl LexError {
     }
 }
 
+impl std::error::Error for LexError {}
+
+impl std::fmt::Display for LexError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Error occured during lexxing:\t{}\n\tNear `{}`", self.message, self.text.as_ref().unwrap_or(&String::default()))
+    }
+}
+
 ///
 /// Utility for Lexer erorrs,
 ///
