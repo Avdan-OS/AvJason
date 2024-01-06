@@ -13,14 +13,6 @@ use std::{
 use anyhow::anyhow;
 pub use span::*;
 
-use crate::{
-    lex::{
-        tokens::{InputElement, Lex},
-        IntoLexResult, LexError, LexResult,
-    },
-    syntax::{value::Value, ParseBuffer},
-};
-
 #[derive(Debug)]
 pub struct SourceFile {
     path: PathBuf,
@@ -131,42 +123,6 @@ impl SourceFile {
     pub(crate) fn iter(&self) -> SourceIter {
         SourceIter::new(self)
     }
-
-    pub(crate) fn lex(&self) -> LexResult<Vec<InputElement>> {
-        let mut v = vec![];
-        let iter = &mut self.iter();
-
-        while !iter.eof() {
-            match InputElement::lex(iter).into_lex_result() {
-                Ok(Some(t)) => v.push(t),
-                Ok(None) => {
-                    return iter.error().expected(Some(0..), "Something...");
-                }
-                Err(err) => {
-                    return Err(err);
-                }
-            }
-        }
-
-        Ok(Some(v))
-    }
-
-    pub(crate) fn parse(&self) -> Result<Value, anyhow::Error> {
-        let Some(lexxed) = self.lex()? else {
-            return Err(anyhow!("Empty file!"));
-        };
-
-        let tokens = lexxed
-            .into_iter()
-            .filter_map(|token| match token {
-                InputElement::Token(t) => Some(t),
-                _ => None,
-            })
-            .collect();
-
-        let buf = &mut ParseBuffer::new(self, tokens);
-        buf.parse().map_err(Into::into)
-    }
 }
 
 #[derive(Clone)]
@@ -268,115 +224,8 @@ impl<'a> SourceIter<'a> {
         self.index = other.index;
     }
 
-    pub(crate) fn error(&self) -> SourceErrorHelper {
-        SourceErrorHelper { iter: self }
-    }
-
     pub(crate) fn eof(&self) -> bool {
         self.index >= self.inner.len()
-    }
-}
-
-pub(crate) struct SourceErrorHelper<'a> {
-    iter: &'a SourceIter<'a>,
-}
-
-impl<'a> SourceErrorHelper<'a> {
-    pub(crate) fn unexpected<T, A>(
-        self,
-        range: Option<impl RangeBounds<A>>,
-        token: impl ToString,
-    ) -> LexResult<T>
-    where
-        isize: TryFrom<A>,
-        A: Copy + Debug,
-        <isize as std::convert::TryFrom<A>>::Error: Debug,
-    {
-        let token = token.to_string();
-
-        let mut text = None;
-        let mut span = 0..self.iter.inner.len();
-        if let Some(range) = range {
-            let i = self.iter.index as isize;
-            let start = i + match range.start_bound() {
-                std::ops::Bound::Included(r) => isize::try_from(*r).unwrap(),
-                std::ops::Bound::Excluded(r) => isize::try_from(*r).unwrap() + 1,
-                std::ops::Bound::Unbounded => 0isize,
-            };
-
-            let end = i + match range.start_bound() {
-                std::ops::Bound::Included(r) => isize::try_from(*r).unwrap() + 1,
-                std::ops::Bound::Excluded(r) => isize::try_from(*r).unwrap(),
-                std::ops::Bound::Unbounded => self.iter.inner.len() as isize,
-            };
-
-            let start = start as usize;
-            let end = end as usize;
-
-            text = self.iter.file.source_at(start..end);
-            span = start..end;
-        }
-
-        Err(LexError::new(
-            span,
-            format!("Unexpected token `{token}`"),
-            text,
-        ))
-    }
-
-    pub(crate) fn expected<T, A>(
-        self,
-        rel_range: Option<impl RangeBounds<A>>,
-        token: impl ToString,
-    ) -> LexResult<T>
-    where
-        isize: TryFrom<A>,
-        A: Copy + Debug,
-        <isize as std::convert::TryFrom<A>>::Error: Debug,
-    {
-        let token = token.to_string();
-
-        let mut text = None;
-        let mut span = 0..self.iter.inner.len();
-        if let Some(range) = rel_range {
-            let i = self.iter.index as isize;
-            let start = i + match range.start_bound() {
-                std::ops::Bound::Included(r) => isize::try_from(*r).unwrap(),
-                std::ops::Bound::Excluded(r) => isize::try_from(*r).unwrap() + 1,
-                std::ops::Bound::Unbounded => 0isize,
-            };
-
-            let end = i + match range.start_bound() {
-                std::ops::Bound::Included(r) => isize::try_from(*r).unwrap() + 1,
-                std::ops::Bound::Excluded(r) => isize::try_from(*r).unwrap(),
-                std::ops::Bound::Unbounded => self.iter.inner.len() as isize,
-            };
-
-            let start = start as usize;
-            let end = end as usize;
-
-            text = self.iter.file.source_at(start..end);
-            span = start..end;
-        }
-
-        Err(LexError::new(
-            span,
-            format!("Expected token `{token}` here"),
-            text,
-        ))
-    }
-}
-
-impl<'a> Iterator for SourceIter<'a> {
-    type Item = (Loc, char);
-
-    fn next(&mut self) -> Option<Self::Item> {
-        let ch = self.inner.get(self.index)?;
-        let l = Loc { index: self.index };
-
-        self.index += 1;
-
-        Some((l, *ch))
     }
 }
 
