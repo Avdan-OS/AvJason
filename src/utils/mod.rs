@@ -229,6 +229,18 @@ impl<'a> SourceIter<'a> {
     }
 }
 
+impl<'a> Iterator for SourceIter<'a> {
+    type Item = (Loc, char);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let ch = self.inner.get(self.index).copied()?;
+        let loc = Loc { index: self.index };
+        self.index += 1;
+
+        Some((loc, ch))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::SourceFile;
