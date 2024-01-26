@@ -4,8 +4,3 @@
 //! 
 //! A parser for [JSON5](https://json5.org/).
 //! 
-#![feature(iter_map_windows, associated_type_defaults, specialization, try_trait_v2)]
-
-pub mod utils;
-pub mod lex;
-pub mod syntax;
