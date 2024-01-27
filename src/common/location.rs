@@ -1,6 +1,6 @@
 //!
 //! Things that help trace errors and tokens: [Span] and [Loc].
-//! 
+//!
 
 use std::ops::{Add, Bound, Range, RangeBounds};
 
@@ -142,18 +142,32 @@ impl RangeBounds<Loc> for Span {
 ///
 /// Returns the span attached to this
 /// object.
-/// 
+///
 pub trait Spanned {
     ///
     /// Returns the span attached to this
     /// object.
-    /// 
+    ///
     fn span(&self) -> Span;
+}
+
+impl Spanned for Span {
+    fn span(&self) -> Span {
+        *self
+    }
+}
+
+impl<'a, S: Spanned> Spanned for &'a S {
+    fn span(&self) -> Span {
+        (*self).span()
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use crate::common::source::{DummySource, Source, ToSpan};
+
+    use super::SpanIter;
 
     #[test]
     fn subspan() {
@@ -192,5 +206,18 @@ mod tests {
         );
 
         assert_eq!(span.subspan(49..).and_then(|s| source.source_at(s)), None);
+    }
+
+    #[test]
+    fn test_combine_span() {
+        let source = DummySource::new(
+            "agdshJAGDJHAVghVJAtesfsdagdsagdsaJGASDHJGAWDHJAGSDASGHJASGHASDGJSADBHJASDGVBJHtthing.",
+        );
+
+        let s1 = (0..13).to_span(&source);
+        let s2 = (13..23).to_span(&source);
+        let s3 = (23..26).to_span(&source);
+
+        assert_eq!([s1, s2, s3].combine(), Some((0..26).to_span(&source)));
     }
 }
