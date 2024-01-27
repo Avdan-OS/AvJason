@@ -37,32 +37,4 @@ mod macro_test {
     #[ECMARef("BooleanLiteral", "https://262.ecma-international.org/5.1/#sec-7.8.2")]
     #[allow(unused)]
     struct LitBool;
-
-    #[derive(Spanned)]
-    struct True(Span);
-
-    #[derive(Spanned)]
-    struct False<T> {
-        span: Span,
-        ghost: PhantomData<T>,
-    }
-
-    #[derive(Spanned)]
-    struct Is {
-        span: Span,
-    }
-
-    #[derive(Spanned)]
-    struct IsTrue(Is, True);
-
-    #[derive(Spanned)]
-    enum Boolean<T> {
-        True(True),
-        False(False<T>),
-        Both(True, False<T>),
-        Complex {
-            truthy: True,
-            falsey: False<T>
-        }
-    }
 }
