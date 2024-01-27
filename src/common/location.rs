@@ -139,6 +139,18 @@ impl RangeBounds<Loc> for Span {
     }
 }
 
+///
+/// Returns the span attached to this
+/// object.
+/// 
+pub trait Spanned {
+    ///
+    /// Returns the span attached to this
+    /// object.
+    /// 
+    fn span(&self) -> Span;
+}
+
 #[cfg(test)]
 mod tests {
     use crate::common::source::{DummySource, Source, ToSpan};

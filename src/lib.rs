@@ -13,6 +13,7 @@
 //! 
 
 pub mod common;
+pub mod lexing;
 
 mod macro_test {
     use avjason_macros::{ECMARef, SpecRef};

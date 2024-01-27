@@ -45,6 +45,8 @@ pub trait Source {
     /// Returns the source code at a given [Span], if within bounds.
     ///
     fn source_at(&self, span: Span) -> Option<String>;
+
+    fn characters(&self) -> &[char];
 }
 
 ///
@@ -127,6 +129,10 @@ mod testing_only {
             } else {
                 None
             }
+        }
+
+        fn characters(&self) -> &[char] {
+            unimplemented!()
         }
     }
 }
