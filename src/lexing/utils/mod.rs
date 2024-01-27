@@ -29,7 +29,7 @@ pub trait LexT: Sized {
     fn peek<S: Source>(input: &SourceStream<S>) -> bool;
 
     ///
-    /// Given that the token is present,
+    /// Given that the token is potentially present,
     /// start lexing.
     ///
     /// This function has guaranteed side-effects on the input [SourceStream] (advancing it).

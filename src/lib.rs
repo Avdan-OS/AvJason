@@ -12,6 +12,10 @@
 //! user *where* the error happened.
 //! 
 
+// This will have to be removed to solve #5
+#![allow(incomplete_features)]
+#![feature(adt_const_params)]
+
 pub mod common;
 pub mod lexing;
 

@@ -8,7 +8,30 @@ pub struct SourceStream<'a, S: Source> {
     source: &'a S,
 }
 
+///
+/// Things that [SourceStream] can
+/// check are coming up.
+///
+pub trait Lookahead {
+    fn upcoming<S: Source>(&self, input: &SourceStream<S>) -> bool;
+}
+
+impl Lookahead for str {
+    fn upcoming<S: Source>(&self, input: &SourceStream<S>) -> bool {
+        let chars = self.chars().collect::<Vec<_>>();
+        input.source.characters()[input.index..(input.index + chars.len())] == chars
+    }
+}
+
 impl<'a, S: Source> SourceStream<'a, S> {
+    ///
+    /// Returns the source where this [SourceStream]
+    /// came from.
+    /// 
+    pub fn source(&self) -> &S {
+        &self.source
+    }
+
     ///
     /// Take the next character in this [SourceStream].
     ///
@@ -28,6 +51,10 @@ impl<'a, S: Source> SourceStream<'a, S> {
     ///
     pub fn lex<L: Lex>(&mut self) -> LexResult<L> {
         Lex::lex(self)
+    }
+
+    pub fn upcoming<L: Lookahead + ?Sized>(&self, lookahead: &L) -> bool {
+        lookahead.upcoming(self)
     }
 }
 
