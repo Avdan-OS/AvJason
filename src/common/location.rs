@@ -36,6 +36,7 @@ where
 ///
 /// Represents the location of a token in source code.
 ///
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Span {
     ///
     /// Start index: inclusive lower bound.

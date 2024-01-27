@@ -19,13 +19,15 @@ pub trait Source {
     ///
     /// This could be line-column information, or simply an index.
     ///
-    type Location;
+    type Location<'a>
+    where
+        Self: 'a;
 
     ///
     /// Find the location of this span,
     /// and put it into a friendly appropriate format.
     ///
-    fn locate(&self, span: Span) -> Option<Self::Location>;
+    fn locate(&self, span: Span) -> Option<Self::Location<'_>>;
 
     ///
     /// Returns the start and (exclusive) end index of this source.
@@ -104,14 +106,15 @@ mod testing_only {
     }
 
     impl Source for DummySource {
-        type Location = Range<usize>;
+        type Location<'a> = Range<usize>
+            where Self: 'a;
 
-        fn locate(&self, span: Span) -> Option<Self::Location> {
+        fn locate(&self, span: Span) -> Option<Self::Location<'_>> {
             if self.in_bounds(&span) {
-                Some(span.start.0..span.end.0)
-            } else {
-                None
+                return Some(span.start.0..span.end.0);
             }
+
+            None
         }
 
         fn bounds(&self) -> Range<Loc> {
