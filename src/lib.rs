@@ -4,6 +4,15 @@
 //! 
 //! A parser for [JSON5](https://json5.org/).
 //! 
+//! ## Why?
+//! This crate provides a very important function: traceability.
+//! ### Tracability
+//! This allows for line-column data to be preserved so that further
+//! processing can benefit from spanned errors, which tell the end
+//! user *where* the error happened.
+//! 
+
+pub mod common;
 
 mod macro_test {
     use avjason_macros::{ECMARef, SpecRef};
