@@ -174,8 +174,6 @@ impl Source for SourceFile {
     fn characters(&self) -> &[char] {
         &self.chars
     }
-
-    
 }
 
 #[cfg(test)]

@@ -4,8 +4,8 @@
 
 use std::ops::{Bound, Range, RangeBounds};
 
-use crate::lexing::utils::SourceStream;
 use super::{Loc, Span, Spanned};
+use crate::lexing::utils::SourceStream;
 
 #[cfg(test)]
 pub use testing_only::DummySource;

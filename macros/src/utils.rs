@@ -145,7 +145,10 @@ impl syn::parse::Parse for JSON5Ref {
             });
         }
 
-        Ok(Self { name: None, id: first })
+        Ok(Self {
+            name: None,
+            id: first,
+        })
     }
 }
 
@@ -165,7 +168,7 @@ impl ToRustdoc for JSON5Ref {
 
 ///
 /// Attempt to get the attribute macros for a [syn::Item].
-/// 
+///
 pub fn get_item_attrs(item: &mut syn::Item) -> Option<&mut Vec<syn::Attribute>> {
     match item {
         syn::Item::Const(syn::ItemConst { ref mut attrs, .. }) => Some(attrs),

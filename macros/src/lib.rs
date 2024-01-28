@@ -212,20 +212,20 @@ pub fn spanned(target: Tokens) -> Tokens {
 
 ///
 /// ## verbatim!
-/// 
+///
 /// Often shortend to `v!`, use *this* macro instead
 /// of its struct helper friends `Verbatim<...>`, `CharPattern<...>`.
-/// 
+///
 /// ### Examples
 /// ```ignore
 /// use avjason_macros::verbatim as v;
-/// 
-/// // (1) Single char match -> Verbatim<{char as &str}> 
+///
+/// // (1) Single char match -> Verbatim<{char as &str}>
 /// type Comma = v!(',');
-/// 
-/// // (2) String match -> Verbatim<{&str}> 
+///
+/// // (2) String match -> Verbatim<{&str}>
 /// type NaN = v!("NaN");
-/// 
+///
 /// // (3) Char range match -> CharPattern<{CharacterRange {
 /// //      start: start,
 /// //      end: end, // (modified to make the end exclusive)

@@ -120,7 +120,7 @@ impl<'a, S: Source> SourceStream<'a, S> {
 
         Some(((start..self.index).to_span(self.source), chars))
     }
-    
+
     ///
     /// Take characters in this [SourceStream] until
     /// the precdicate return true.

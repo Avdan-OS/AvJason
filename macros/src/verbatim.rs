@@ -34,10 +34,10 @@ mod paths {
 
     ///
     /// Generates a path with the last segment
-    /// having generic parameters. 
-    /// 
+    /// having generic parameters.
+    ///
     /// Equivalent to:
-    /// 
+    ///
     /// ```ignore
     /// $path<$arg>
     /// ```
@@ -71,7 +71,7 @@ mod paths {
 
     ///
     /// Equivalent to:
-    /// 
+    ///
     /// ```ignore
     /// crate::lexing::CharacterRange {
     ///     start: $start,

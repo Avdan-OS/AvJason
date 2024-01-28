@@ -2,6 +2,7 @@
 //! Lexical tokens.
 //!
 
-pub mod whitespace;
-pub mod line_terminator;
 pub mod comment;
+pub mod line_terminator;
+pub mod punctuator;
+pub mod whitespace;
