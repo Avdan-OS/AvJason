@@ -33,42 +33,40 @@ pub enum LineTerminatorSequence {
     PS(v!('\u{2029}')),
 }
 
+pub fn is_line_terminator(ch: &char) -> bool {
+    matches!(ch, '\n' | '\r' | '\u{2028}' | '\u{2029}')
+}
+
 impl LexT for LineTerminator {
     fn peek<S: Source>(input: &SourceStream<S>) -> bool {
-        <v!('\n') as LexT>::peek(input)
-            || <v!('\r') as LexT>::peek(input)
-            || <v!('\u{2028}') as LexT>::peek(input)
-            || <v!('\u{2029}') as LexT>::peek(input)
+        input.upcoming(is_line_terminator)
     }
 
     fn lex<S: Source>(input: &mut SourceStream<S>) -> Result<Self, LexError> {
-        // .into_result() ok since we know there's at least one upcoming variant.
+        // .unwrap_as_result() ok since we know there's at least one upcoming variant.
         Lex::lex(input)
             .map(Self::LF)
             .or(|| Lex::lex(input).map(Self::CR))
             .or(|| Lex::lex(input).map(Self::LS))
             .or(|| Lex::lex(input).map(Self::PS))
-            .into_result()
+            .unwrap_as_result()
     }
 }
 
 impl LexT for LineTerminatorSequence {
     fn peek<S: Source>(input: &SourceStream<S>) -> bool {
-        <v!('\n') as LexT>::peek(input)
-            || <v!('\r') as LexT>::peek(input)
-            || <v!('\u{2028}') as LexT>::peek(input)
-            || <v!('\u{2029}') as LexT>::peek(input)
+        input.upcoming(is_line_terminator)
     }
 
     fn lex<S: Source>(input: &mut SourceStream<S>) -> Result<Self, LexError> {
-        // .into_result() ok since we know there's at least one upcoming variant.
+        // .unwrap_as_result() ok since we know there's at least one upcoming variant.
         Lex::lex(input)
             .map(Self::CRLF)
             .or(|| Lex::lex(input).map(Self::LF))
             .or(|| Lex::lex(input).map(Self::CR))
             .or(|| Lex::lex(input).map(Self::LS))
             .or(|| Lex::lex(input).map(Self::PS))
-            .into_result()
+            .unwrap_as_result()
     }
 }
 

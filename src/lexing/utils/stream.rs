@@ -164,6 +164,13 @@ impl<'a, S: Source> SourceStream<'a, S> {
     pub fn peek(&self) -> Option<&char> {
         self.source.characters().get(self.index)
     }
+    
+    ///
+    /// Peeks at the (0-based) n-th next upcoming character.
+    ///
+    pub fn peek_n(&self, n: usize) -> Option<&char> {
+        self.source.characters().get(self.index + n)
+    }
 
     pub fn left(&self) -> Option<String> {
         self.source

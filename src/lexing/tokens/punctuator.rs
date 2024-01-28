@@ -1,5 +1,7 @@
 //!
-//! Punctuators.
+//! ## Punctuators
+//!
+//! Pieces of punctuation: `{}[]:,`.
 //!
 
 use avjason_macros::{verbatim as v, SpecRef};
@@ -63,7 +65,7 @@ impl LexT for Punctuator {
     }
 
     fn lex<S: Source>(input: &mut SourceStream<S>) -> Result<Self, LexError> {
-        // .into_result() ok since Self::peek() -> one variant present.
+        // .unwrap_as_result() ok since Self::peek() -> one variant present.
         input
             .lex()
             .map(Self::OpenBrace)
@@ -72,7 +74,7 @@ impl LexT for Punctuator {
             .or(|| input.lex().map(Self::CloseBracket))
             .or(|| input.lex().map(Self::Colon))
             .or(|| input.lex().map(Self::Comma))
-            .into_result()
+            .unwrap_as_result()
     }
 }
 

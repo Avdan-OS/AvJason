@@ -149,7 +149,7 @@ impl<L> LexResult<L> {
     /// Turn this into a normal Rust [Result],
     /// [panic]-ing if this is a [LexResult::Nothing].
     ///
-    pub fn into_result(self) -> Result<L, LexError> {
+    pub fn unwrap_as_result(self) -> Result<L, LexError> {
         match self {
             LexResult::Lexed(lexed) => Ok(lexed),
             LexResult::Errant(errant) => Err(errant),

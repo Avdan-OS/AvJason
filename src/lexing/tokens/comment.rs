@@ -71,11 +71,11 @@ impl LexT for Comment {
     }
 
     fn lex<S: Source>(input: &mut SourceStream<S>) -> Result<Self, LexError> {
-        // .into_result() ok since Self::peek() -> exists either variant.
+        // .unwrap_as_result() ok since Self::peek() -> exists either variant.
         Lex::lex(input)
             .map(Self::Single)
             .or(|| Lex::lex(input).map(Self::Multi))
-            .into_result()
+            .unwrap_as_result()
     }
 }
 

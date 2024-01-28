@@ -288,7 +288,7 @@ pub fn spanned_for_enum(en: &syn::ItemEnum) -> Option<syn::Expr> {
         Diagnostic::spanned(
             en.span().unwrap(),
             Level::Error,
-            "Cannot derive spanned for enum no variants.",
+            "Cannot derive spanned for enum with no variants.",
         )
         .emit();
 

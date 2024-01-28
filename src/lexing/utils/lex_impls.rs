@@ -22,7 +22,6 @@ impl<L: LexT> LexT for Many<L> {
         let mut v = vec![];
 
         while L::peek(input) {
-            println!("{:?}", input.left());
             v.push(L::lex(input)?);
         }
 
