@@ -1,8 +1,10 @@
+use avjason_macros::Spanned;
+
 use crate::common::{Source, Span, Spanned};
 
 use super::SourceStream;
 
-#[derive(Debug)]
+#[derive(Debug, Spanned)]
 pub struct LexError {
     span: Span,
     message: String,

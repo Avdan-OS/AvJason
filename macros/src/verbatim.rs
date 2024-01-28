@@ -9,6 +9,9 @@ use syn::parse::{Parse, ParseStream};
 
 use self::paths::generic_path;
 
+///
+/// Accepted patterns for `verbatim!`.
+///
 pub enum VerbatimPat {
     LitStr(syn::LitStr),
     LitChar(syn::LitChar),
@@ -30,6 +33,11 @@ mod paths {
     }
 
     ///
+    /// Generates a path with the last segment
+    /// having generic parameters. 
+    /// 
+    /// Equivalent to:
+    /// 
     /// ```ignore
     /// $path<$arg>
     /// ```
@@ -61,6 +69,16 @@ mod paths {
         })
     }
 
+    ///
+    /// Equivalent to:
+    /// 
+    /// ```ignore
+    /// crate::lexing::CharacterRange {
+    ///     start: $start,
+    ///     end: $end,
+    /// }
+    /// ```
+    ///
     pub fn character_range(start: syn::Expr, end: syn::Expr) -> syn::Expr {
         let path = syn::Path {
             leading_colon: None,
@@ -172,7 +190,7 @@ impl Parse for VerbatimPat {
     fn parse(input: ParseStream) -> syn::Result<Self> {
         let pat = syn::Pat::parse_single(input)?;
 
-        // Nasty pattern matching, but that's the downside of enums galore.
+        // Nasty pattern matching, but that's the downside of nested enums.
         match pat {
             syn::Pat::Lit(syn::ExprLit {
                 lit: lit @ (syn::Lit::Char(_) | syn::Lit::Str(_)),

@@ -1,4 +1,4 @@
-use std::{marker::ConstParamTy, ops::{Range, RangeInclusive}};
+use std::marker::ConstParamTy;
 
 use crate::common::{Loc, Source, Span, Spanned, ToSpan};
 
@@ -25,7 +25,10 @@ impl Lookahead for str {
 }
 
 ///
-/// A const-friendly implementation of [RangeBounds]<char>.
+/// A const-friendly implementation of [std::ops::Range]<char>.
+/// 
+/// This works with the [crate::verbatim] macro to support
+/// the range syntax: `v!('0'..='9')`.
 ///
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct CharacterRange {
@@ -39,7 +42,6 @@ pub struct CharacterRange {
     ///
     pub end: char,
 }
-
 
 impl ConstParamTy for CharacterRange {}
 
@@ -97,6 +99,9 @@ impl<'a, S: Source> SourceStream<'a, S> {
         Lex::lex(self)
     }
 
+    ///
+    /// Checks if a lookahead pattern is next in the stream.
+    /// 
     pub fn upcoming<L: Lookahead + ?Sized>(&self, lookahead: &L) -> bool {
         lookahead.upcoming(self)
     }

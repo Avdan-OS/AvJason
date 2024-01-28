@@ -9,7 +9,9 @@ use crate::common::{Loc, Source, Span, SpanIter, ToSpan};
 use super::utils::{stream::CharacterRange, LexError, LexT, SourceStream};
 
 ///
-/// Do not use me directly, use [crate::verbatim] instead!
+/// Looks for a particular string in input.
+/// 
+/// **Do not use me directly, use [crate::verbatim] instead!**
 ///
 #[derive(Debug, Spanned)]
 pub struct Verbatim<const A: &'static str> {
