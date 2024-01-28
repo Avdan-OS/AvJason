@@ -9,11 +9,11 @@ use super::{Lex, LexResult};
 /// check are coming up.
 ///
 pub trait Lookahead {
-    fn upcoming<S: Source>(&self, input: &SourceStream<S>) -> bool;
+    fn upcoming<S: Source>(self, input: &SourceStream<S>) -> bool;
 }
 
-impl Lookahead for str {
-    fn upcoming<S: Source>(&self, input: &SourceStream<S>) -> bool {
+impl<'a> Lookahead for &'a str {
+    fn upcoming<S: Source>(self, input: &SourceStream<S>) -> bool {
         let chars = self.chars().collect::<Vec<_>>();
         input
             .source
@@ -24,9 +24,15 @@ impl Lookahead for str {
     }
 }
 
+impl<F: Fn(&char) -> bool> Lookahead for F {
+    fn upcoming<S: Source>(self, input: &SourceStream<S>) -> bool {
+        input.peek().map(self).unwrap_or(false)
+    }
+}
+
 ///
 /// A const-friendly implementation of [std::ops::Range]<char>.
-/// 
+///
 /// This works with the [crate::verbatim] macro to support
 /// the range syntax: `v!('0'..='9')`.
 ///
@@ -45,8 +51,8 @@ pub struct CharacterRange {
 
 impl ConstParamTy for CharacterRange {}
 
-impl Lookahead for CharacterRange {
-    fn upcoming<S: Source>(&self, input: &SourceStream<S>) -> bool {
+impl<'a> Lookahead for &'a CharacterRange {
+    fn upcoming<S: Source>(self, input: &SourceStream<S>) -> bool {
         input
             .source
             .characters()
@@ -82,14 +88,37 @@ impl<'a, S: Source> SourceStream<'a, S> {
     /// Take the next character in this [SourceStream].
     ///
     pub fn take(&mut self) -> Option<(Loc, char)> {
-        let index = self.index;
+        let start = self.index;
 
-        if let Some(ch) = self.source.characters().get(index) {
+        if let Some(ch) = self.source.characters().get(self.index) {
             self.index += 1;
-            return Some((Loc(index), *ch));
+            return Some((Loc(start), *ch));
         }
 
         None
+    }
+
+    ///
+    /// Take characters in this [SourceStream] whilst they
+    /// satisfy some predicate.
+    ///
+    pub fn take_while(&mut self, pred: impl Fn(&char) -> bool) -> Option<(Span, Vec<char>)> {
+        let start = self.index;
+        let mut chars = vec![];
+        while let Some(ch) = self.source.characters().get(self.index) {
+            if !pred(ch) {
+                break;
+            }
+
+            chars.push(*ch);
+            self.index += 1;
+        }
+
+        if chars.is_empty() {
+            return None;
+        }
+
+        Some(((start..self.index).to_span(self.source), chars))
     }
 
     ///
@@ -101,9 +130,23 @@ impl<'a, S: Source> SourceStream<'a, S> {
 
     ///
     /// Checks if a lookahead pattern is next in the stream.
-    /// 
-    pub fn upcoming<L: Lookahead + ?Sized>(&self, lookahead: &L) -> bool {
+    ///
+    pub fn upcoming<L: Lookahead>(&self, lookahead: L) -> bool {
         lookahead.upcoming(self)
+    }
+
+    ///
+    /// Peeks at the next upcoming character.
+    ///
+    pub fn peek(&self) -> Option<&char> {
+        self.source.characters().get(self.index)
+    }
+
+    pub fn left(&self) -> Option<String> {
+        self.source
+            .characters()
+            .get(self.index..)
+            .map(|s| s.into_iter().collect())
     }
 }
 

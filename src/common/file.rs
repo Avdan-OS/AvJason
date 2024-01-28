@@ -4,7 +4,7 @@
 
 use std::{fmt::Formatter, ops::Range, path::Path};
 
-use super::{Loc, Source, Span};
+use super::{Loc, Source, Span, Spanned};
 
 ///
 /// Line and column information for
@@ -162,7 +162,8 @@ impl Source for SourceFile {
         Loc(0)..Loc(self.chars.len())
     }
 
-    fn source_at(&self, span: Span) -> Option<String> {
+    fn source_at(&self, span: impl Spanned) -> Option<String> {
+        let span = span.span();
         if self.in_bounds(&span) {
             return Some(self.chars[span.as_range()].iter().collect());
         }

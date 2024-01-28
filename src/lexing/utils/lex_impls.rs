@@ -2,7 +2,7 @@
 //! Utility implementations for [Lex].
 //!
 
-use std::ops::{Deref, DerefMut};
+use std::{any::type_name, ops::{Deref, DerefMut}};
 
 use crate::common::{Source, Span, SpanIter, Spanned};
 

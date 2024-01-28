@@ -20,7 +20,7 @@ pub use self::{
 };
 
 ///
-/// Private trait, only for internal use.
+/// For internal use.
 ///
 #[doc(hidden)]
 pub trait LexT: Sized {

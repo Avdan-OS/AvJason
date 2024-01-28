@@ -5,7 +5,7 @@
 use std::ops::{Bound, Range, RangeBounds};
 
 use crate::lexing::utils::SourceStream;
-use super::{Loc, Span};
+use super::{Loc, Span, Spanned};
 
 #[cfg(test)]
 pub use testing_only::DummySource;
@@ -50,7 +50,7 @@ pub trait Source {
     ///
     /// Returns the source code at a given [Span], if within bounds.
     ///
-    fn source_at(&self, span: Span) -> Option<String>;
+    fn source_at(&self, span: impl Spanned) -> Option<String>;
 
     ///
     /// Get the characters in this [Source].
@@ -103,7 +103,7 @@ impl<R: RangeBounds<usize>> ToSpan for R {
 mod testing_only {
     use std::ops::Range;
 
-    use crate::common::{Loc, Span};
+    use crate::common::{Loc, Span, Spanned};
 
     use super::Source;
 
@@ -137,7 +137,8 @@ mod testing_only {
             Loc(0)..Loc(self.text.len())
         }
 
-        fn source_at(&self, span: Span) -> Option<String> {
+        fn source_at(&self, span: impl Spanned) -> Option<String> {
+            let span = span.span();
             if self.in_bounds(&span) {
                 self.text.get(span.as_range()).map(ToString::to_string)
             } else {

@@ -1,23 +1,29 @@
 //!
 //! Pattern matching helpers.
-//! 
+//!
 
 use avjason_macros::Spanned;
 
-use crate::common::{Loc, Source, Span, SpanIter, ToSpan};
+use crate::common::{Source, Span, SpanIter};
 
 use crate::lexing::{CharacterRange, LexError, LexT, SourceStream};
 
 ///
 /// Looks for a particular string in input.
-/// 
+///
 /// ***
-/// 
+///
 /// **Do not use me directly, use [crate::verbatim] instead!**
 ///
 #[derive(Debug, Spanned)]
 pub struct Verbatim<const A: &'static str> {
     span: Span,
+}
+
+impl<const A: &'static str> Verbatim<A> {
+    fn char_length() -> usize {
+        A.chars().count()
+    }
 }
 
 impl<const A: &'static str> LexT for Verbatim<A> {
@@ -28,9 +34,9 @@ impl<const A: &'static str> LexT for Verbatim<A> {
     fn lex<S: Source>(input: &mut SourceStream<S>) -> Result<Self, LexError> {
         let mut locs = vec![];
 
-        for _ in 0..A.len() {
-            let (Loc(loc), _) = input.take().unwrap();
-            locs.push((loc..(loc + 1)).to_span(input.source()));
+        for _ in 0..Self::char_length() {
+            let (loc, _) = input.take().unwrap();
+            locs.push(Span::from(loc));
         }
 
         Ok(Self {
@@ -42,9 +48,9 @@ impl<const A: &'static str> LexT for Verbatim<A> {
 
 ///
 /// Matches a character with a given range.
-/// 
+///
 /// ***
-/// 
+///
 /// **Do not use me directly, use [crate::verbatim] instead!**
 ///
 #[derive(Debug, Spanned)]
@@ -80,8 +86,8 @@ mod tests {
     use crate::{
         common::{file::SourceFile, Source},
         lexing::{
-            CharPattern,
             utils::{stream::CharacterRange, Many},
+            CharPattern,
         },
     };
 
@@ -92,7 +98,6 @@ mod tests {
         let source = SourceFile::dummy_file(",.");
         let input = &mut source.stream();
         let comma: Verbatim<","> = input.lex().expect("Valid parse");
-        println!("{comma:?}")
     }
 
     #[test]
@@ -105,7 +110,6 @@ mod tests {
         let source = SourceFile::dummy_file("126439012363421890");
         let input = &mut source.stream();
         let digit: Many<CharPattern<DIGIT>> = input.lex().expect("Valid parse");
-        println!("{digit:?}")
     }
 
     #[test]
@@ -119,7 +123,7 @@ mod tests {
             let input = &mut source.stream();
             let _: Comma = input.lex().expect("Valid parse");
         }
-        
+
         {
             let source = SourceFile::dummy_file("::");
             let input = &mut source.stream();
