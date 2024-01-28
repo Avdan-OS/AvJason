@@ -2,7 +2,7 @@
 //! Utility implementations for [Lex].
 //!
 
-use std::{any::type_name, ops::{Deref, DerefMut}};
+use std::ops::{Deref, DerefMut};
 
 use crate::common::{Source, Span, SpanIter, Spanned};
 
@@ -22,6 +22,7 @@ impl<L: LexT> LexT for Many<L> {
         let mut v = vec![];
 
         while L::peek(input) {
+            println!("{:?}", input.left());
             v.push(L::lex(input)?);
         }
 

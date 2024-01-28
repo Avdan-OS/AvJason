@@ -120,6 +120,29 @@ impl<'a, S: Source> SourceStream<'a, S> {
 
         Some(((start..self.index).to_span(self.source), chars))
     }
+    
+    ///
+    /// Take characters in this [SourceStream] until
+    /// the precdicate return true.
+    ///
+    pub fn take_until(&mut self, pred: impl Fn(&Self) -> bool) -> Option<(Span, Vec<char>)> {
+        let start = self.index;
+        let mut chars = vec![];
+        while let Some(ch) = self.source.characters().get(self.index) {
+            if pred(self) {
+                break;
+            }
+
+            chars.push(*ch);
+            self.index += 1;
+        }
+
+        if chars.is_empty() {
+            return None;
+        }
+
+        Some(((start..self.index).to_span(self.source), chars))
+    }
 
     ///
     /// Attempt to lex for token `L`.
@@ -146,7 +169,7 @@ impl<'a, S: Source> SourceStream<'a, S> {
         self.source
             .characters()
             .get(self.index..)
-            .map(|s| s.into_iter().collect())
+            .map(|s| s.iter().collect())
     }
 }
 

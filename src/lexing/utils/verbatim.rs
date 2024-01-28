@@ -97,7 +97,7 @@ mod tests {
     fn verbatim() {
         let source = SourceFile::dummy_file(",.");
         let input = &mut source.stream();
-        let comma: Verbatim<","> = input.lex().expect("Valid parse");
+        let _: Verbatim<","> = input.lex().expect("Valid parse");
     }
 
     #[test]
@@ -109,11 +109,11 @@ mod tests {
 
         let source = SourceFile::dummy_file("126439012363421890");
         let input = &mut source.stream();
-        let digit: Many<CharPattern<DIGIT>> = input.lex().expect("Valid parse");
+        let _: Many<CharPattern<DIGIT>> = input.lex().expect("Valid parse");
     }
 
     #[test]
-    fn macro_test() {
+    fn verbatim_macro_test() {
         type Comma = v!(',');
         type DoubleColon = v!("::");
         type Digit = v!('0'..='9');
