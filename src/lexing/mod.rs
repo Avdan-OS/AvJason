@@ -7,3 +7,5 @@
 pub mod utils;
 pub mod tokens;
 
+pub use tokens::{CharPattern, Verbatim};
+pub use utils::stream::{SourceStream, CharacterRange};
