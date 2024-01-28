@@ -6,6 +6,7 @@ pub mod lex_impls;
 pub mod peek;
 pub mod result;
 pub mod stream;
+pub mod verbatim;
 
 use std::marker::PhantomData;
 

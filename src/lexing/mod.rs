@@ -4,8 +4,11 @@
 //! some [lexical grammar](https://en.wikipedia.org/wiki/Lexical_grammar).
 //!
 
-pub mod utils;
 pub mod tokens;
+pub mod utils;
 
-pub use tokens::{CharPattern, Verbatim};
-pub use utils::stream::{SourceStream, CharacterRange};
+pub use utils::{
+    stream::CharacterRange,
+    verbatim::{CharPattern, Verbatim},
+    AtLeast, Exactly, Lex, LexError, LexResult, LexT, Many, Peek, SourceStream,
+};
