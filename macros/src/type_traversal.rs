@@ -104,13 +104,6 @@ impl Generic for syn::ItemEnum {
     }
 }
 
-pub fn lit_str(st: &str) -> syn::Expr {
-    syn::Expr::Lit(syn::ExprLit {
-        attrs: Default::default(),
-        lit: syn::Lit::Str(syn::LitStr::new(st, Span::call_site())),
-    })
-}
-
 pub fn variant_path(var: &syn::Ident) -> syn::Path {
     syn::Path {
         leading_colon: Default::default(),

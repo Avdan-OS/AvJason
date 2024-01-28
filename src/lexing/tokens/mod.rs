@@ -23,9 +23,10 @@ impl<const A: &'static str> LexT for Verbatim<A> {
             locs.push((loc..(loc+1)).to_span(input.source()));
         }
         
+
         Ok(Self {
-            span: locs.into_iter().combine()
-                .expect("DO PUT EMPTY STRINGS IN VERBATIM!"),
+            // If A == "", then an empty Span is returned.
+            span: locs.into_iter().combine(),
         })
         
     }

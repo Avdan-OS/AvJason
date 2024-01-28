@@ -4,7 +4,7 @@
 
 use std::ops::{Deref, DerefMut};
 
-use crate::common::Source;
+use crate::common::{Source, Span, SpanIter, Spanned};
 
 use super::{LexError, LexT, SourceStream};
 
@@ -26,6 +26,12 @@ impl<L: LexT> LexT for Many<L> {
         }
 
         Ok(v)
+    }
+}
+
+impl<S: Spanned> Spanned for Many<S> {
+    fn span(&self) -> Span {
+        SpanIter::combine(self.iter().map(S::span))
     }
 }
 
@@ -52,6 +58,12 @@ impl<const N: usize, L: LexT> LexT for AtLeast<N, L> {
         }
 
         Ok(Self(many))
+    }
+}
+
+impl<const N: usize, S: Spanned> Spanned for AtLeast<N, S> {
+    fn span(&self) -> Span {
+        SpanIter::combine(self.iter().map(S::span))
     }
 }
 
@@ -100,6 +112,12 @@ where
         let many: [L; N] = unsafe { many.try_into().unwrap_unchecked() };
 
         Ok(Self(many))
+    }
+}
+
+impl<const N: usize, S: Spanned> Spanned for Exactly<N, S> {
+    fn span(&self) -> Span {
+        SpanIter::combine(self.iter().map(S::span))
     }
 }
 

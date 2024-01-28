@@ -101,7 +101,92 @@ pub fn ECMARef(params: Tokens, target: Tokens) -> Tokens {
 }
 
 ///
+/// ## derive(Spanned)
+/// 
+/// Derives the Spanned trait for both structs and enums.
+/// 
+/// ### Terminal Tokens
+/// ```ignore
+/// ///
+/// /// (1) Named span field.
+/// ///
+/// /// ASCII digit '0'..='9'.
+/// ///
+/// #[derive(Spanned)]
+/// struct Digit {
+///     letter: char,
+///     span: Span,
+/// }
+///    
+/// ///
+/// /// (2) Tuple struct.
+/// ///
+/// /// Literally `.`
+/// ///
+/// #[derive(Spanned)]
+/// struct Dot(Span);
+/// ```
+/// These are not composed of any smaller tokens. These *must* either:
+/// 1. have a name `span: Span` field, or
+/// 2. be a tuple struct with *only* a single Span field.
+/// 
+/// ***
+/// 
+/// ### Non-terminal Tokens
+/// ```ignore
+/// ///
+/// /// (1.1) Named Struct
+/// ///
+/// /// A base-10 decimal number,
+/// /// with optional integral part.
+/// ///
+/// #[derive(Spanned)]
+/// struct Decimal {
+///     integral: Many<Digit>,
+///     point: Dot,
+///     mantissa: AtLeast<1, Digit>
+/// }
+/// 
+/// ///
+/// /// (1.2) Tuple struct
+/// ///
+/// /// A base-10 integer.
+/// ///
+/// #[derive(Spanned)]
+/// struct Integer(AtLeast<1, Digit>);
+/// 
+/// ///
+/// /// (2.1) Enum (union of tokens).
+/// ///
+/// /// A number: either an integer, or floating-point.
+/// ///
+/// #[derive(Spanned)]
+/// enum Number {
+///     Decimal(Decimal),
+///     Integer(Integer),
+/// }
 ///
+/// ///
+/// /// (2.2) More complex enum.
+/// ///
+/// /// Either a base-10 integer, or hex integer.
+/// ///
+/// #[derive(Spanned)]
+/// enum NumberOrHex {
+///     Base10(AtLeast<1, Digit>),
+///     Base16(v!(0x), AtLeast<1, HexDigit>),
+/// }
+/// ```
+/// 
+/// These tokens derive their span from all of their child tokens.
+/// They can be expressed either as:
+/// 
+/// 1. Structs, either:
+///     1. Named, or
+///     2. Tuple.
+/// 2. Enums:
+///     1. Union types, and even
+///     2. More complicated structures.
 ///
 #[proc_macro_derive(Spanned)]
 pub fn spanned(target: Tokens) -> Tokens {

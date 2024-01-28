@@ -54,7 +54,7 @@ impl Span {
     /// Returns Some(subspan), given the relative indexes from the start of this span,
     /// returning None if the end index is out of this span's bounds.
     ///
-    pub fn subspan(&self, indexes: impl RangeBounds<usize>) -> Option<Span> {
+    pub fn subspan(&self, indexes: impl RangeBounds<usize>) -> Option<Self> {
         let start = match indexes.start_bound() {
             Bound::Included(included) => self.start + included,
             Bound::Excluded(excluded) => self.start + (excluded + 1),
@@ -79,12 +79,12 @@ impl Span {
     /// Use this [Span] as a start, taking the range between this span's start,
     /// and the end oi the last of the passed in iterator (including itself).
     ///
-    pub fn combine(self, others: impl IntoIterator<Item = Span>) -> Span {
+    pub fn combine(self, others: impl IntoIterator<Item = Span>) -> Self {
         let Self { start, end } = self;
 
-        // Take the end bound of the last Span,
+        // Take the end bound of the last non-empty Span,
         // if others is not empty, and use that instead.
-        let last = others.into_iter().last();
+        let last = others.into_iter().filter(|s| !s.is_empty()).last();
         if let Some(Self { end, .. }) = last {
             return Self { start, end };
         }
@@ -98,6 +98,23 @@ impl Span {
     pub fn as_range(&self) -> Range<usize> {
         self.start.0..self.end.0
     }
+
+    ///
+    /// Returns an empty span.
+    ///
+    pub fn empty() -> Self {
+        Self {
+            start: Loc(0),
+            end: Loc(0),
+        }
+    }
+
+    ///
+    /// Is this [Span] empty (captures nothing).
+    ///
+    pub fn is_empty(&self) -> bool {
+        self.end.0 - self.start.0 == 0
+    }
 }
 
 ///
@@ -109,13 +126,15 @@ pub trait SpanIter: Sized + IntoIterator<Item = Span> {
     /// resulting in a [Span] encompassing all
     /// passed in [Span]s (assuming this iter is in ascending order).
     ///
-    fn combine(self) -> Option<Span>;
+    fn combine(self) -> Span;
 }
 
 impl<Iter: IntoIterator<Item = Span>> SpanIter for Iter {
-    fn combine(self) -> Option<Span> {
+    fn combine(self) -> Span {
         let mut iter = self.into_iter();
-        iter.next().map(|s| s.combine(iter))
+        iter.next()
+            .map(|s| s.combine(iter))
+            .unwrap_or(Span::empty())
     }
 }
 
@@ -218,6 +237,6 @@ mod tests {
         let s2 = (13..23).to_span(&source);
         let s3 = (23..26).to_span(&source);
 
-        assert_eq!([s1, s2, s3].combine(), Some((0..26).to_span(&source)));
+        assert_eq!([s1, s2, s3].combine(), (0..26).to_span(&source));
     }
 }

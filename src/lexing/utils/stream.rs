@@ -29,7 +29,7 @@ impl<'a, S: Source> SourceStream<'a, S> {
     /// came from.
     /// 
     pub fn source(&self) -> &S {
-        &self.source
+        self.source
     }
 
     ///
