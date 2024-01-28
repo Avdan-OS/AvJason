@@ -4,6 +4,12 @@
 
 use std::ops::{Bound, Range, RangeBounds};
 
+use crate::lexing::utils::SourceStream;
+use super::{Loc, Span};
+
+#[cfg(test)]
+pub use testing_only::DummySource;
+
 ///
 /// Generic idea of source code: could be a file,
 /// or a simple string.
@@ -46,7 +52,20 @@ pub trait Source {
     ///
     fn source_at(&self, span: Span) -> Option<String>;
 
+    ///
+    /// Get the characters in this [Source].
+    ///
     fn characters(&self) -> &[char];
+
+    ///
+    /// Crate a stream from this source.
+    ///
+    fn stream(&self) -> SourceStream<Self>
+    where
+        Self: Sized,
+    {
+        SourceStream::new(self)
+    }
 }
 
 ///
@@ -79,11 +98,6 @@ impl<R: RangeBounds<usize>> ToSpan for R {
         Span { start, end }
     }
 }
-
-#[cfg(test)]
-pub use testing_only::DummySource;
-
-use super::{Loc, Span};
 
 #[cfg(test)]
 mod testing_only {

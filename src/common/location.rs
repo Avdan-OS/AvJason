@@ -158,6 +158,18 @@ impl RangeBounds<Loc> for Span {
     }
 }
 
+impl From<Loc> for Span {
+    ///
+    /// Span of a single character.
+    /// 
+    fn from(start: Loc) -> Self {
+        Self {
+            start,
+            end: start +1,
+        }
+    }
+}
+
 ///
 /// Returns the span attached to this
 /// object.

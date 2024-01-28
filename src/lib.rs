@@ -61,9 +61,6 @@ mod macro_test {
         True(True),
         False(False<T>),
         Both(True, False<T>),
-        Complex {
-            truthy: True,
-            falsey: False<T>
-        }
+        Complex { truthy: True, falsey: False<T> },
     }
 }
