@@ -97,6 +97,12 @@ impl MathematicalValue for HexDigit {
             'D' => 0xD,
             'E' => 0xE,
             'F' => 0xF,
+            'a' => 0xA,
+            'b' => 0xB,
+            'c' => 0xC,
+            'd' => 0xD,
+            'e' => 0xE,
+            'f' => 0xF,
             _ => unreachable!(),
         }
     }

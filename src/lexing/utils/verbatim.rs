@@ -15,7 +15,7 @@ use crate::lexing::{CharacterRange, LexError, LexT, SourceStream};
 ///
 /// **Do not use me directly, use [crate::verbatim] instead!**
 ///
-#[derive(Debug, Spanned)]
+#[derive(Debug, Spanned, Clone)]
 pub struct Verbatim<const A: &'static str> {
     span: Span,
 }

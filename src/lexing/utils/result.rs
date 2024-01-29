@@ -1,4 +1,9 @@
-use std::any::type_name;
+use std::{
+    any::type_name,
+    convert::Infallible,
+    fmt::Debug,
+    ops::{ControlFlow, FromResidual, Try},
+};
 
 use avjason_macros::Spanned;
 
@@ -79,6 +84,22 @@ impl<L> LexResult<L> {
     }
 
     ///
+    /// Allegory of [Result::unwrap_err]
+    ///
+    pub fn unwrap_err(self) -> LexError
+    where
+        L: Debug,
+    {
+        match self {
+            LexResult::Lexed(lexed) => {
+                panic!("called `LexResult::unwrap()` on an `Lexed` value: {lexed:?}")
+            }
+            LexResult::Errant(errant) => errant,
+            LexResult::Nothing => panic!("called `LexResult::unwrap_err()` on a `Nothing` value"),
+        }
+    }
+
+    ///
     /// Is this [LexResult::Errant]?
     ///
     pub fn is_errant(&self) -> bool {
@@ -114,18 +135,49 @@ impl<L> LexResult<L> {
     }
 
     ///
+    /// Allegory of [Result::and_then].
+    ///
+    /// If this is [LexResult::Lexed], the mapper function will be called,
+    /// and its return value is returned.
+    ///
+    pub fn and_then<T, F: FnOnce(L) -> LexResult<T>>(self, mapper: F) -> LexResult<T> {
+        match self {
+            LexResult::Lexed(lexed) => mapper(lexed),
+            LexResult::Errant(errant) => LexResult::Errant(errant),
+            LexResult::Nothing => LexResult::Nothing,
+        }
+    }
+
+    ///
     /// Require this potential token to be present, not [LexResult::Nothing] or [LexResult::Errant].
     ///
     /// If this is [LexResult::Nothing], make this into a [LexResult::Errant]
     /// with the message "expected a {$TOKEN} token".
     ///
-    pub fn expected<S: Source>(self, input: SourceStream<S>) -> Self {
+    pub fn expected<S: Source>(self, input: &SourceStream<S>) -> Self {
         match self {
             s @ LexResult::Lexed(_) => s,
             s @ LexResult::Errant(_) => s,
             LexResult::Nothing => LexResult::Errant(LexError {
                 span: input.span(),
                 message: format!("Expected a {} token here.", type_name::<L>()),
+            }),
+        }
+    }
+
+    ///
+    /// Require this potential token to be present, not [LexResult::Nothing] or [LexResult::Errant].
+    ///
+    /// If this is [LexResult::Nothing], make this into a [LexResult::Errant]
+    /// with the message "expected a {$TOKEN} token".
+    ///
+    pub fn expected_msg<S: Source>(self, input: &SourceStream<S>, msg: impl ToString) -> Self {
+        match self {
+            s @ LexResult::Lexed(_) => s,
+            s @ LexResult::Errant(_) => s,
+            LexResult::Nothing => LexResult::Errant(LexError {
+                span: input.span(),
+                message: msg.to_string(),
             }),
         }
     }
@@ -154,6 +206,34 @@ impl<L> LexResult<L> {
             LexResult::Lexed(lexed) => Ok(lexed),
             LexResult::Errant(errant) => Err(errant),
             LexResult::Nothing => panic!("Called `LexResult::into_result()` on a Nothing value."),
+        }
+    }
+}
+
+impl<L> Try for LexResult<L> {
+    type Output = L;
+
+    type Residual = LexResult<Infallible>;
+
+    fn from_output(output: Self::Output) -> Self {
+        Self::Lexed(output)
+    }
+
+    fn branch(self) -> ControlFlow<Self::Residual, Self::Output> {
+        match self {
+            LexResult::Lexed(lexed) => ControlFlow::Continue(lexed),
+            LexResult::Errant(errant) => ControlFlow::Break(LexResult::Errant(errant)),
+            LexResult::Nothing => ControlFlow::Break(LexResult::Nothing),
+        }
+    }
+}
+
+impl<L> FromResidual for LexResult<L> {
+    fn from_residual(residual: <Self as Try>::Residual) -> Self {
+        match residual {
+            LexResult::Lexed(_) => unreachable!(),
+            LexResult::Errant(errant) => LexResult::Errant(errant),
+            LexResult::Nothing => LexResult::Nothing,
         }
     }
 }

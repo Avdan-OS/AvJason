@@ -12,7 +12,11 @@ use crate::{
     lexing::{Exactly, Lex, LexError, LexT, SourceStream},
 };
 
-use super::{line_terminator::is_line_terminator, number::HexDigit};
+use super::{
+    line_terminator::is_line_terminator,
+    number::{HexDigit, MathematicalValue},
+    string::CharacterValue,
+};
 #[derive(Debug, Spanned)]
 pub enum EscapeSequence {
     CharacterEscapeSequence(CharacterEscapeSequence),
@@ -147,7 +151,7 @@ impl LexT for HexEscapeSequence {
     }
 
     fn lex<S: Source>(input: &mut SourceStream<S>) -> Result<Self, LexError> {
-        Ok(Self(LexT::lex(input)?, LexT::lex(input)?))
+        Ok(Self(LexT::lex(input)?, Lex::lex(input).unwrap_as_result()?))
     }
 }
 
@@ -157,7 +161,81 @@ impl LexT for UnicodeEscapeSequence {
     }
 
     fn lex<S: Source>(input: &mut SourceStream<S>) -> Result<Self, LexError> {
-        Ok(Self(LexT::lex(input)?, LexT::lex(input)?))
+        Ok(Self(LexT::lex(input)?, Lex::lex(input).unwrap_as_result()?))
+    }
+}
+
+// ---
+
+impl CharacterValue for EscapeSequence {
+    fn cv<'a, 'b: 'a>(&'a self, buf: &'b mut [u16; 2]) -> &'b [u16] {
+        match self {
+            EscapeSequence::CharacterEscapeSequence(esc) => esc.cv(buf),
+            EscapeSequence::Null(null) => null.cv(buf),
+            EscapeSequence::HexEscapeSequence(hex) => hex.cv(buf),
+            EscapeSequence::UnicodeEscapeSequence(unicode) => unicode.cv(buf),
+        }
+    }
+}
+
+impl CharacterValue for CharacterEscapeSequence {
+    fn cv<'a, 'b: 'a>(&'a self, buf: &'b mut [u16; 2]) -> &'b [u16] {
+        match self {
+            CharacterEscapeSequence::Single(single) => single.cv(buf),
+            CharacterEscapeSequence::NonEscape(non_escape) => non_escape.cv(buf),
+        }
+    }
+}
+
+impl CharacterValue for Null {
+    fn cv<'a, 'b: 'a>(&'a self, buf: &'b mut [u16; 2]) -> &'b [u16] {
+        '\u{0000}'.encode_utf16(buf)
+    }
+}
+
+impl CharacterValue for SingleEscapeChar {
+    ///
+    /// Compliant with [Table 4, Section 7.4](https://262.ecma-international.org/5.1/#sec-7.8.4)
+    /// of the ECMAScript spec.
+    ///
+    fn cv<'a, 'b: 'a>(&'a self, buf: &'b mut [u16; 2]) -> &'b [u16] {
+        match self.raw {
+            '\'' => '\u{0027}', // single quote
+            '"' => '\u{0022}',  // double quote
+            '\\' => '\u{005C}', // backslash
+            'b' => '\u{0008}',  // backspace
+            'f' => '\u{000C}',  // form feed
+            'n' => '\u{000A}',  // line feed (new line)
+            'r' => '\u{000D}',  // carriage return
+            't' => '\u{0009}',  // horizontal tab
+            'v' => '\u{000B}',  // vertical tab
+            _ => unreachable!(),
+        }
+        .encode_utf16(buf)
+    }
+}
+
+impl CharacterValue for NonEscapeChar {
+    ///
+    /// > The CV of NonEscapeCharacter :: SourceCharacter but not one of EscapeCharacter or
+    /// > LineTerminator is the SourceCharacter character itself.
+    ///
+    fn cv<'a, 'b: 'a>(&'a self, buf: &'b mut [u16; 2]) -> &'b [u16] {
+        self.raw.encode_utf16(buf)
+    }
+}
+
+impl CharacterValue for HexEscapeSequence {
+    fn cv<'a, 'b: 'a>(&'a self, buf: &'b mut [u16; 2]) -> &'b [u16] {
+        buf[0] = self.1.mv() as u16;
+        &buf[0..1]
+    }
+}
+
+impl CharacterValue for UnicodeEscapeSequence {
+    fn cv<'a, 'b: 'a>(&'a self, buf: &'b mut [u16; 2]) -> &'b [u16] {
+        buf[0] = self.1.mv();
+        &buf[0..1]
     }
 }
 

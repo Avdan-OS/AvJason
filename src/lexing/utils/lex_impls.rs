@@ -2,30 +2,37 @@
 //! Utility implementations for [Lex].
 //!
 
-use std::ops::{Deref, DerefMut};
+use std::{
+    marker::PhantomData,
+    ops::{Deref, DerefMut},
+};
 
 use crate::common::{Source, Span, SpanIter, Spanned};
 
-use super::{LexError, LexT, SourceStream};
+use super::{Lex, LexResult, LexT, Peek, SourceStream};
 
 ///
 /// Many (possibly one or zero) of a lexical token.
 ///
 pub type Many<L> = Vec<L>;
 
-impl<L: LexT> LexT for Many<L> {
-    fn peek<S: Source>(input: &SourceStream<S>) -> bool {
-        L::peek(input)
+impl<L: LexT> Lex for Many<L> {
+    fn peek<S: Source>(_: &SourceStream<S>) -> Peek<Self> {
+        Peek::Possible(PhantomData::<Self>)
     }
 
-    fn lex<S: Source>(input: &mut SourceStream<S>) -> Result<Self, LexError> {
+    fn lex<S: Source>(input: &mut SourceStream<S>) -> LexResult<Self> {
         let mut v = vec![];
 
-        while L::peek(input) {
-            v.push(L::lex(input)?);
+        loop {
+            match <L as Lex>::lex(input) {
+                LexResult::Lexed(lexed) => v.push(lexed),
+                LexResult::Errant(errant) => return LexResult::Errant(errant),
+                LexResult::Nothing => break,
+            }
         }
 
-        Ok(v)
+        LexResult::Lexed(v)
     }
 }
 
@@ -41,23 +48,27 @@ impl<S: Spanned> Spanned for Many<S> {
 #[derive(Debug)]
 pub struct AtLeast<const N: usize, L>(Vec<L>);
 
-impl<const N: usize, L: LexT> LexT for AtLeast<N, L> {
-    fn peek<S: Source>(input: &SourceStream<S>) -> bool {
-        L::peek(input)
+impl<const N: usize, L: LexT> Lex for AtLeast<N, L> {
+    fn peek<S: Source>(input: &SourceStream<S>) -> Peek<Self> {
+        if N == 0 {
+            return Peek::Possible(PhantomData::<Self>);
+        }
+
+        <L as Lex>::peek(input).map()
     }
 
-    fn lex<S: Source>(input: &mut SourceStream<S>) -> Result<Self, LexError> {
-        let many: Many<L> = LexT::lex(input)?;
+    fn lex<S: Source>(input: &mut SourceStream<S>) -> LexResult<Self> {
+        let many: Many<L> = Lex::lex(input)?;
 
         if many.len() < N {
-            return Err(input.error(format!(
+            return LexResult::Errant(input.error(format!(
                 "Expected at least {N} {} tokens: got {}.",
                 std::any::type_name::<L>(),
                 many.len(),
             )));
         }
 
-        Ok(Self(many))
+        LexResult::Lexed(Self(many))
     }
 }
 
@@ -89,19 +100,23 @@ pub struct Exactly<const N: usize, L>([L; N])
 where
     [(); N]: Sized;
 
-impl<const N: usize, L: LexT> LexT for Exactly<N, L>
+impl<const N: usize, L: LexT> Lex for Exactly<N, L>
 where
     [(); N]: Sized,
 {
-    fn peek<S: Source>(input: &SourceStream<S>) -> bool {
-        L::peek(input)
+    fn peek<S: Source>(input: &SourceStream<S>) -> Peek<Self> {
+        if N == 0 {
+            return Peek::Possible(PhantomData::<Self>);
+        }
+
+        <L as Lex>::peek(input).map()
     }
 
-    fn lex<S: Source>(input: &mut SourceStream<S>) -> Result<Self, LexError> {
-        let many: Many<L> = LexT::lex(input)?;
+    fn lex<S: Source>(input: &mut SourceStream<S>) -> LexResult<Self> {
+        let many: Many<L> = Lex::lex(input)?;
 
         if many.len() != N {
-            return Err(input.error(format!(
+            return LexResult::Errant(input.error(format!(
                 "Expected {N} {} tokens: got {}.",
                 std::any::type_name::<L>(),
                 many.len()
@@ -111,7 +126,7 @@ where
         // SAFETY: Just checked the length, so unwrap okay.
         let many: [L; N] = unsafe { many.try_into().unwrap_unchecked() };
 
-        Ok(Self(many))
+        LexResult::Lexed(Self(many))
     }
 }
 

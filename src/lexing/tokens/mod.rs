@@ -8,3 +8,4 @@ pub mod punctuator;
 pub mod whitespace;
 pub mod number;
 pub mod escapes;
+pub mod string;

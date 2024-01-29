@@ -14,7 +14,7 @@
 
 // This will have to be removed to solve #5:
 #![allow(incomplete_features)]
-#![feature(adt_const_params)]
+#![feature(adt_const_params, try_trait_v2)]
 
 pub mod common;
 pub mod lexing;

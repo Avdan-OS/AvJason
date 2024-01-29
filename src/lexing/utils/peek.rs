@@ -28,4 +28,11 @@ impl<L: LexT> Peek<L> {
             Peek::Absent => LexResult::Nothing,
         }
     }
+
+    pub fn map<T>(self) -> Peek<T> {
+        match self {
+            Peek::Possible(_) => Peek::Possible(PhantomData::<T>),
+            Peek::Absent => Peek::Absent,
+        }
+    }
 }
