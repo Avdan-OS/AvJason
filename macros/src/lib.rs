@@ -6,6 +6,7 @@
 
 mod spanned;
 mod type_traversal;
+mod unicode_category;
 mod utils;
 mod verbatim;
 
@@ -13,6 +14,7 @@ use proc_macro::{Diagnostic, Level, Span, TokenStream as Tokens};
 use quote::ToTokens;
 use spanned::{derive_spanned_for_enum, derive_spanned_for_struct};
 use syn::parse_macro_input;
+use unicode_category::UnicodePatInput;
 use utils::{get_item_attrs, ECMARef, JSON5Ref, ToRustdoc};
 use verbatim::VerbatimPat;
 
@@ -241,4 +243,64 @@ pub fn verbatim(params: Tokens) -> Tokens {
     let params: VerbatimPat = syn::parse_macro_input!(params);
     let ty = params.into_type();
     ty.into_token_stream().into()
+}
+
+///
+/// ## unicode!
+///
+/// Allows you to match entire Unicode major, or minor groups
+/// (but not both at the same time!)
+///
+/// Use *this* macro instead of `MatchMajorCategory<...>` and `MatchMinorCategory<...>`.
+///  
+/// ### Examples
+///
+/// ```ignore
+/// use avjason_macros::unicode;
+///
+/// ///
+/// /// (1) Major category -> any character in the "Letters (L)" category.
+/// ///
+/// pub type ULetter = unicode!(L);
+///
+/// ///
+/// /// (2) Minor category -> any character in the "Math symbols (Sm)" category.
+/// ///
+/// pub type UMathSymbol = unicode!(Sm);
+///
+/// ///
+/// /// (3.1) Union of major categories -> any unicode character.
+/// ///
+/// pub type UAll = unicode!(C | L | M | N | P | S | Z);
+///
+/// ///
+/// /// (3.2) Union of minor categories ->
+/// /// equivalent to major category "Letters (L)".
+/// ///
+/// pub type ULetterUnion = unicode!(Lu | Ll | Lt | Lm | Lo);
+/// ```
+/// 
+/// ### Syntax
+/// This macro accepts either:
+/// 1. one-letter Unicode major categories (`C`, `L`, `M`, `N`, `P`, `S`, `Z`).
+/// 2. two-letter Unicode minor categories:
+///     * `C` -> `Cc`, `Cf`, `Cs`, `Co`, `Cn`;
+///     * `L` -> `Lu`, `Ll`, `Lt`, `Lm`, `Lo`;
+///     * `M` -> `Mm`, `Mc`, `Me`;
+///     * `P` -> `Pc`, `Pd`, `Ps`, `Pe`, `Pi`, `Pf`, `Po`;
+///     * `S` -> `Sm`, `Sc`, `Sk`, `So`;
+///     * `Z` -> `Zs`, `Zl`, `Zp`; 
+/// 3. Unions of:
+///     1. Major categories (only)
+///     2. Minor categories (only)
+///
+#[proc_macro]
+pub fn unicode(params: Tokens) -> Tokens {
+    let params: UnicodePatInput = syn::parse_macro_input!(params);
+
+    params
+        .into_type()
+        .map(ToTokens::into_token_stream)
+        .map(Into::into)
+        .unwrap_or_default()
 }

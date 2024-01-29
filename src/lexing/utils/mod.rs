@@ -7,6 +7,7 @@ pub mod peek;
 pub mod result;
 pub mod stream;
 pub mod verbatim;
+pub mod unicode;
 
 use std::marker::PhantomData;
 
