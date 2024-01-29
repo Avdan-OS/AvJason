@@ -105,7 +105,7 @@ pub struct HexEscapeSequence(v!('x'), Exactly<2, HexDigit>);
     "UnicodeEscapeSequence",
     "https://262.ecma-international.org/5.1/#sec-7.8.4"
 )]
-#[derive(Debug, Spanned)]
+#[derive(Debug, Spanned, Clone)]
 pub struct UnicodeEscapeSequence(v!('u'), Exactly<4, HexDigit>);
 
 // ---

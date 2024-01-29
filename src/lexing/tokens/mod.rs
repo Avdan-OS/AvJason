@@ -9,3 +9,4 @@ pub mod whitespace;
 pub mod number;
 pub mod escapes;
 pub mod string;
+pub mod identifier;

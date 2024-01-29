@@ -39,6 +39,7 @@ impl<'a, S: Source> SourceStream<'a, S> {
 /// The rust of attempting parse token `L`
 /// from a [SourceStream].
 ///
+#[derive(Debug)]
 pub enum LexResult<L> {
     ///
     /// Valid `L` token.
@@ -167,7 +168,7 @@ impl<L> LexResult<L> {
     /// If this is [LexResult::Lexed], the mapper function will be called,
     /// and its return value is returned.
     ///
-    pub fn and_then<T, F: FnOnce(L) -> LexResult<T>>(self, mapper: F) -> LexResult<T> {
+    pub fn and<T, F: FnOnce(L) -> LexResult<T>>(self, mapper: F) -> LexResult<T> {
         match self {
             LexResult::Lexed(lexed) => mapper(lexed),
             LexResult::Errant(errant) => LexResult::Errant(errant),

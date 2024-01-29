@@ -26,7 +26,7 @@ use super::{LexError, LexT, SourceStream};
 ///
 /// **Do not use me directly, use [crate::unicode] instead!**
 ///
-#[derive(Debug, Spanned)]
+#[derive(Debug, Spanned, Clone)]
 pub struct MatchMajorCategory<const C: &'static [MajorCategory]> {
     span: Span,
     raw: char,
@@ -40,7 +40,7 @@ pub struct MatchMajorCategory<const C: &'static [MajorCategory]> {
 ///
 /// **Do not use me directly, use [crate::unicode] instead!**
 ///
-#[derive(Debug, Spanned)]
+#[derive(Debug, Spanned, Clone)]
 pub struct MatchMinorCategory<const C: &'static [MinorCategory]> {
     span: Span,
     raw: char,
@@ -258,16 +258,17 @@ impl PartialEq<MinorCategory> for finl_unicode::categories::MinorCategory {
 mod tests {
     use avjason_macros::unicode;
 
-    use crate::{common::{file::SourceFile, Source}, lexing::Many};
+    use crate::{
+        common::{file::SourceFile, Source},
+        lexing::Many,
+    };
 
     type Letter = unicode!(Lu | Ll);
 
     #[test]
     fn test_lex() {
-        let source =
-            SourceFile::dummy_file("Apples");
+        let source = SourceFile::dummy_file("Apples");
         let input = &mut source.stream();
-        let comment: Many<Letter> = input.lex().expect("Valid parse");
-        println!("{comment:?}");
+        let _: Many<Letter> = input.lex().expect("Valid parse");
     }
 }

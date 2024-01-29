@@ -57,13 +57,13 @@ impl LexT for LString {
     fn lex<S: Source>(input: &mut SourceStream<S>) -> Result<Self, LexError> {
         input
             .lex()
-            .and_then(|opening| {
+            .and(|opening| {
                 let contents = input.lex()?;
                 let closing = input.lex().expected_msg(input, "Expected closing `\"`")?;
                 LexResult::Lexed(Self::Double(opening, contents, closing))
             })
             .or(|| {
-                input.lex().and_then(|opening| {
+                input.lex().and(|opening| {
                     let contents = input.lex()?;
                     let closing = input.lex().expected_msg(input, "Expected closing `'`")?;
                     LexResult::Lexed(Self::Single(opening, contents, closing))
@@ -93,7 +93,7 @@ impl<const D: &'static str> LexT for StringPart<D> {
             .or(|| input.lex().map(Self::PS))
             .or(|| input.lex().map(Self::Char))
             .or(|| {
-                input.lex().and_then(|backslash: v!('\\')| {
+                input.lex().and(|backslash: v!('\\')| {
                     input
                         .lex()
                         .map(|esc| Self::Escape(backslash.clone(), esc))
@@ -143,6 +143,16 @@ pub trait CharacterValue {
     /// buffer, returning a slice of the bytes used.
     ///
     fn cv<'a, 'b: 'a>(&'a self, buf: &'b mut [u16; 2]) -> &'b [u16];
+
+    ///
+    /// Attempts to convert this utf-16 as a Rust char.
+    ///
+    fn try_as_char(&self) -> Option<char> {
+        let buf = &mut [0u16; 2];
+
+        let mut a = char::decode_utf16(self.cv(buf).iter().copied());
+        a.next().and_then(Result::ok)
+    }
 }
 
 ///
@@ -198,18 +208,28 @@ impl StringValue for LString {
     }
 }
 
+///
+/// Collect character values as a UTF-16 string.
+///
+pub fn collect_cv_into_utf16<'a, CV: CharacterValue + 'a>(
+    iter: impl IntoIterator<Item = &'a CV> + 'a,
+) -> Vec<u16> {
+    let iter: Vec<_> = iter.into_iter().collect();
+    // Complete guesswork about the initial capacity:
+    // I'm assuming that we're not going to get too many multi-u16 chars.
+    let mut string = Vec::with_capacity(iter.len() * 5 / 4);
+
+    let buf = &mut [0; 2];
+    for part in iter {
+        string.extend(part.cv(buf))
+    }
+
+    string
+}
+
 impl<const D: &'static str> StringValue for Many<StringPart<D>> {
     fn sv(&self) -> Vec<u16> {
-        // Complete guesswork about the initial capacity:
-        // I'm assuming that we're not going to get too many multi-u16 chars.
-        let mut string = Vec::with_capacity(self.len() * 5 / 4);
-
-        let buf = &mut [0; 2];
-        for part in self {
-            string.extend(part.cv(buf))
-        }
-
-        string
+        collect_cv_into_utf16(self.iter())
     }
 }
 // ---

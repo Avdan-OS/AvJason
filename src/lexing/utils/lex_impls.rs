@@ -25,7 +25,8 @@ impl<L: LexT> Lex for Many<L> {
         let mut v = vec![];
 
         loop {
-            match <L as Lex>::lex(input) {
+            let res = <L as Lex>::lex(input);
+            match res {
                 LexResult::Lexed(lexed) => v.push(lexed),
                 LexResult::Errant(errant) => return LexResult::Errant(errant),
                 LexResult::Nothing => break,
@@ -45,7 +46,7 @@ impl<S: Spanned> Spanned for Many<S> {
 ///
 /// At least `N` lots of `L`-tokens.
 ///
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct AtLeast<const N: usize, L>(Vec<L>);
 
 impl<const N: usize, L: LexT> Lex for AtLeast<N, L> {
@@ -95,7 +96,7 @@ impl<const N: usize, L> DerefMut for AtLeast<N, L> {
 ///
 /// Exactly `N` lots of `L`-tokens: no more, no less.
 ///
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Exactly<const N: usize, L>([L; N])
 where
     [(); N]: Sized;

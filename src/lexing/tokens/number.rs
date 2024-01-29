@@ -17,13 +17,13 @@ use crate::{
 pub type DecimalDigit = v!('0'..='9');
 
 #[ECMARef("HexDigit", "https://262.ecma-international.org/5.1/#sec-7.8.3")]
-#[derive(Debug, Spanned)]
+#[derive(Debug, Spanned, Clone)]
 pub struct HexDigit {
     span: Span,
     raw: char,
 }
 
-// TODO: Implement Lexical grammar for Identifier, rest of Number.
+// TODO: Implement Lexical grammar for rest of Number.
 // TODO: Implement syntactical grammar.
 // TODO: Implement serde integration (+ fancy Spanned<Struct>)
 
