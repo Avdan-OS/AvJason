@@ -1,5 +1,5 @@
 //!
-//! String Literals.
+//! ## String Literals
 //!
 
 use avjason_macros::{verbatim as v, Spanned, SpecRef};

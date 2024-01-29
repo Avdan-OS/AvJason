@@ -1,11 +1,11 @@
 //!
-//! Escape
+//! ## Escape Codes
 //!
 //! Technically not tokens.
 //! These are used between strings and identifiers.
 //!
 
-use avjason_macros::{verbatim as v, Spanned};
+use avjason_macros::{verbatim as v, ECMARef, Spanned};
 
 use crate::{
     common::{Source, Span},
@@ -17,6 +17,26 @@ use super::{
     number::{HexDigit, MathematicalValue},
     string::CharacterValue,
 };
+
+///
+/// Any valid ECMAScript escape sequence:
+///
+/// ```javascript
+/// '\n'    // Escaped character
+/// '\y'    // Non-escaped character
+/// '\0'    // Null character
+/// '\x1A'  // Hex code escape
+/// '\u0A1B'// Unicode escape
+/// ```
+///
+/// ***
+///
+/// ### Note
+/// Since the octal escape syntax is optional and not part of the main spec
+/// (see [Section B.1.2](https://262.ecma-international.org/5.1/#sec-B.1.2)),
+/// it is *not* supported.
+///
+#[ECMARef("EscapeSequence", "https://262.ecma-international.org/5.1/#sec-7.8.4")]
 #[derive(Debug, Spanned)]
 pub enum EscapeSequence {
     CharacterEscapeSequence(CharacterEscapeSequence),
@@ -25,32 +45,66 @@ pub enum EscapeSequence {
     UnicodeEscapeSequence(UnicodeEscapeSequence),
 }
 
+///
+/// Single characters that have been escaped
+/// with a `\`.
+///
+#[ECMARef(
+    "CharacterEscapeSequence",
+    "https://262.ecma-international.org/5.1/#sec-7.8.4"
+)]
 #[derive(Debug, Spanned)]
 pub enum CharacterEscapeSequence {
     Single(SingleEscapeChar),
     NonEscape(NonEscapeChar),
 }
 
+///
+/// An escape character, like `\t` for `HORIZONTAL TAB`.
+///
+#[ECMARef(
+    "SingleEscapeChar",
+    "https://262.ecma-international.org/5.1/#sec-7.8.4"
+)]
 #[derive(Debug, Spanned)]
 pub struct SingleEscapeChar {
     span: Span,
     raw: char,
 }
 
+///
+/// A character that's not an escape character,
+/// and should be treated verbatim.
+///
+#[ECMARef(
+    "NonEscapeChar",
+    "https://262.ecma-international.org/5.1/#sec-7.8.4"
+)]
 #[derive(Debug, Spanned)]
 pub struct NonEscapeChar {
     span: Span,
     raw: char,
 }
 
+///
+/// Represents a `NULL` character `U+0000`
+///
 #[derive(Debug, Spanned)]
 pub struct Null {
     span: Span,
 }
 
+#[ECMARef(
+    "HexEscapeSequence",
+    "https://262.ecma-international.org/5.1/#sec-7.8.4"
+)]
 #[derive(Debug, Spanned)]
 pub struct HexEscapeSequence(v!('x'), Exactly<2, HexDigit>);
 
+#[ECMARef(
+    "UnicodeEscapeSequence",
+    "https://262.ecma-international.org/5.1/#sec-7.8.4"
+)]
 #[derive(Debug, Spanned)]
 pub struct UnicodeEscapeSequence(v!('u'), Exactly<4, HexDigit>);
 

@@ -1,5 +1,5 @@
 //!
-//! ## Number
+//! ## Number literals
 //!
 //! Number tokens like integers, hex integers, and decimals,
 //!
@@ -13,18 +13,6 @@ use crate::{
     lexing::{AtLeast, Exactly, LexError, LexT, SourceStream},
 };
 
-///
-/// The numerical value of a literal.
-///
-/// See the [ECMAScript spec](https://262.ecma-international.org/5.1/#sec-7.8.3).
-///
-pub trait MathematicalValue {
-    type Value: Copy + Add<Self::Value, Output = Self::Value>;
-    const BASE: usize;
-
-    fn mv(&self) -> Self::Value;
-}
-
 #[ECMARef("DecimalDigit", "https://262.ecma-international.org/5.1/#sec-7.8.3")]
 pub type DecimalDigit = v!('0'..='9');
 
@@ -34,6 +22,10 @@ pub struct HexDigit {
     span: Span,
     raw: char,
 }
+
+// TODO: Implement Lexical grammar for Identifier, rest of Number.
+// TODO: Implement syntactical grammar.
+// TODO: Implement serde integration (+ fancy Spanned<Struct>)
 
 // ---
 
@@ -53,6 +45,18 @@ impl LexT for HexDigit {
 }
 
 // ---
+
+///
+/// The numerical value of a literal.
+///
+/// See the [ECMAScript spec](https://262.ecma-international.org/5.1/#sec-7.8.3).
+///
+pub trait MathematicalValue {
+    type Value: Copy + Add<Self::Value, Output = Self::Value>;
+    const BASE: usize;
+
+    fn mv(&self) -> Self::Value;
+}
 
 impl MathematicalValue for DecimalDigit {
     type Value = u8;

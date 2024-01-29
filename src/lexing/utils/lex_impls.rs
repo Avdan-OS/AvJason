@@ -12,7 +12,7 @@ use crate::common::{Source, Span, SpanIter, Spanned};
 use super::{Lex, LexResult, LexT, Peek, SourceStream};
 
 ///
-/// Many (possibly one or zero) of a lexical token.
+/// Many (possibly one or zero) of `L`-tokens.
 ///
 pub type Many<L> = Vec<L>;
 
@@ -43,7 +43,7 @@ impl<S: Spanned> Spanned for Many<S> {
 }
 
 ///
-/// At least N lots of `L`-tokens.
+/// At least `N` lots of `L`-tokens.
 ///
 #[derive(Debug)]
 pub struct AtLeast<const N: usize, L>(Vec<L>);
@@ -93,7 +93,7 @@ impl<const N: usize, L> DerefMut for AtLeast<N, L> {
 }
 
 ///
-/// Exactly N lots of `L`-tokens: no more, no less.
+/// Exactly `N` lots of `L`-tokens: no more, no less.
 ///
 #[derive(Debug)]
 pub struct Exactly<const N: usize, L>([L; N])

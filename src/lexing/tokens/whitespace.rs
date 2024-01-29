@@ -1,5 +1,6 @@
 //!
-//! ## WhiteSpace
+//! ## Whitespace
+//! 
 //! Empty space that doesn't contribute syntactically.
 //!
 

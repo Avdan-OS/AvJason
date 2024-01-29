@@ -31,7 +31,7 @@ impl<F: Fn(&char) -> bool> Lookahead for F {
 }
 
 ///
-/// A const-friendly implementation of [std::ops::Range]<char>.
+/// A const-friendly implementation of [std::ops::Range]\&lt;char&gt;.
 ///
 /// This works with the [crate::verbatim] macro to support
 /// the range syntax: `v!('0'..='9')`.
@@ -62,6 +62,10 @@ impl<'a> Lookahead for &'a CharacterRange {
     }
 }
 
+///
+/// Represents a stream of input characters,
+/// which can attempted to be lexed into tokens.
+///
 #[derive(Debug, Clone)]
 pub struct SourceStream<'a, S: Source> {
     index: usize,
@@ -164,7 +168,7 @@ impl<'a, S: Source> SourceStream<'a, S> {
     pub fn peek(&self) -> Option<&char> {
         self.source.characters().get(self.index)
     }
-    
+
     ///
     /// Peeks at the (0-based) n-th next upcoming character.
     ///
@@ -172,6 +176,9 @@ impl<'a, S: Source> SourceStream<'a, S> {
         self.source.characters().get(self.index + n)
     }
 
+    ///
+    /// Returns the unlexed portion of this stream &mdash; what's next.
+    ///
     pub fn left(&self) -> Option<String> {
         self.source
             .characters()

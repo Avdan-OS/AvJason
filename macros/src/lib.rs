@@ -19,15 +19,15 @@ use verbatim::VerbatimPat;
 ///
 /// ## SpecRef
 ///
-/// Allows easy reference of the **JSON5** specification.
+/// Allows easy reference of the [**JSON5** specification](https://spec.json5.org/).
 ///
 /// This macro will add an additional section at the top of the Rustdoc
 /// for the item attached, linking to the relevant section in the specification.
 ///
 /// ### Example
 ///
-/// ```ignore
-/// use crate::SpecRef;
+/// ```
+/// use avjason_macros::SpecRef;
 ///    
 /// // With custom title.
 /// #[SpecRef("Number", "JSON5Number")]
@@ -64,15 +64,15 @@ pub fn SpecRef(params: Tokens, target: Tokens) -> Tokens {
 ///
 /// ## ECMARef
 ///
-/// Allows easy reference of the **ECMAScript** specification.
+/// Allows easy reference of the [**ECMAScript 5.1** specification](https://262.ecma-international.org/5.1/#).
 ///
 /// This macro will add an additional section at the top of the Rustdoc
 /// for the item attached, linking to the relevant section in the specification.
 ///
 /// ### Example
 ///
-/// ```ignore
-/// use crate::ECMARef;
+/// ```
+/// use avjason_macros::ECMARef;
 ///
 /// // You must always include an acompanying URL.
 /// #[ECMARef("NullLiteral", "https://262.ecma-international.org/5.1/#sec-7.8.1")]
@@ -109,6 +109,8 @@ pub fn ECMARef(params: Tokens, target: Tokens) -> Tokens {
 ///
 /// ### Terminal Tokens
 /// ```ignore
+/// use avjason_macros::Spanned;
+/// use avjason::common::Span;
 /// ///
 /// /// (1) Named span field.
 /// ///
@@ -176,7 +178,7 @@ pub fn ECMARef(params: Tokens, target: Tokens) -> Tokens {
 /// #[derive(Spanned)]
 /// enum NumberOrHex {
 ///     Base10(AtLeast<1, Digit>),
-///     Base16(v!(0x), AtLeast<1, HexDigit>),
+///     Base16(v!("0x"), AtLeast<1, HexDigit>),
 /// }
 /// ```
 ///

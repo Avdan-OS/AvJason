@@ -41,13 +41,13 @@ impl<'a, S: Source> SourceStream<'a, S> {
 ///
 pub enum LexResult<L> {
     ///
-    /// Valid token.
+    /// Valid `L` token.
     ///
     Lexed(L),
 
     ///
-    /// An attempt was made to parse a token,
-    /// but it did not fully abide by the lexical grammar.
+    /// An attempt was made to parse an `L` token,
+    /// but the input did not fully abide by `L`'s lexical grammar.
     ///
     Errant(LexError),
 
@@ -100,6 +100,18 @@ impl<L> LexResult<L> {
     }
 
     ///
+    /// Turn this into a normal Rust [Result],
+    /// panicking if this is a [LexResult::Nothing].
+    ///
+    pub fn unwrap_as_result(self) -> Result<L, LexError> {
+        match self {
+            LexResult::Lexed(lexed) => Ok(lexed),
+            LexResult::Errant(errant) => Err(errant),
+            LexResult::Nothing => panic!("Called `LexResult::into_result()` on a Nothing value."),
+        }
+    }
+
+    ///
     /// Is this [LexResult::Errant]?
     ///
     pub fn is_errant(&self) -> bool {
@@ -135,6 +147,21 @@ impl<L> LexResult<L> {
     }
 
     ///
+    /// If this is [LexResult::Nothing], execute the `or` function instead,
+    /// and return its result.
+    ///
+    /// This allows for chaining of results, which may be useful
+    /// in lexing enums with different variants.
+    ///
+    pub fn or<F: FnOnce() -> Self>(self, or: F) -> Self {
+        match self {
+            s @ LexResult::Lexed(_) => s,
+            s @ LexResult::Errant(_) => s,
+            LexResult::Nothing => or(),
+        }
+    }
+
+    ///
     /// Allegory of [Result::and_then].
     ///
     /// If this is [LexResult::Lexed], the mapper function will be called,
@@ -152,7 +179,7 @@ impl<L> LexResult<L> {
     /// Require this potential token to be present, not [LexResult::Nothing] or [LexResult::Errant].
     ///
     /// If this is [LexResult::Nothing], make this into a [LexResult::Errant]
-    /// with the message "expected a {$TOKEN} token".
+    /// with the message "expected a {$`L`} token".
     ///
     pub fn expected<S: Source>(self, input: &SourceStream<S>) -> Self {
         match self {
@@ -168,8 +195,7 @@ impl<L> LexResult<L> {
     ///
     /// Require this potential token to be present, not [LexResult::Nothing] or [LexResult::Errant].
     ///
-    /// If this is [LexResult::Nothing], make this into a [LexResult::Errant]
-    /// with the message "expected a {$TOKEN} token".
+    /// If this is [LexResult::Nothing], display the custom message.
     ///
     pub fn expected_msg<S: Source>(self, input: &SourceStream<S>, msg: impl ToString) -> Self {
         match self {
@@ -179,33 +205,6 @@ impl<L> LexResult<L> {
                 span: input.span(),
                 message: msg.to_string(),
             }),
-        }
-    }
-
-    ///
-    /// If this is [LexResult::Nothing], execute the `or` function instead,
-    /// and return its result.
-    ///
-    /// This allows for chaining of results, which may be useful
-    /// in lexing enums with different variants.
-    ///
-    pub fn or<F: FnOnce() -> Self>(self, or: F) -> Self {
-        match self {
-            s @ LexResult::Lexed(_) => s,
-            s @ LexResult::Errant(_) => s,
-            LexResult::Nothing => or(),
-        }
-    }
-
-    ///
-    /// Turn this into a normal Rust [Result],
-    /// [panic]-ing if this is a [LexResult::Nothing].
-    ///
-    pub fn unwrap_as_result(self) -> Result<L, LexError> {
-        match self {
-            LexResult::Lexed(lexed) => Ok(lexed),
-            LexResult::Errant(errant) => Err(errant),
-            LexResult::Nothing => panic!("Called `LexResult::into_result()` on a Nothing value."),
         }
     }
 }

@@ -6,7 +6,7 @@
 //!
 //! ## Why?
 //! This crate provides a very important function: traceability.
-//! ### Tracability
+//! ### Traceability
 //! This allows for line-column data to be preserved so that further
 //! processing can benefit from spanned errors, which tell the end
 //! user *where* the error happened.
